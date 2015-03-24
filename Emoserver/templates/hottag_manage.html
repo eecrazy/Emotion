@@ -1,0 +1,194 @@
+{% extends "base_manage.html" %}
+{% load upload_tags %}
+
+{% block display %}
+<h2>热门标签列表</h2>
+
+<div class="panel panel-info" style="display:none;" >
+  <div class="panel-body">
+    <form   class="form-horizontal" role="form">
+        {% csrf_token %} 
+
+    <div class="row">
+    <div class="col-md-2">
+      <input type="text" class="form-control emo" >
+    </div>
+    <div class="col-md-8">
+      <input type="text" class="form-control input-lg">
+    </div>
+     <button type="button" class="btn btn-primary btn-lg addhottag">
+      创建新热门
+     </button>
+  </div>
+  </form>
+  </div>
+</div>
+
+{% if hottag_cates %}
+	{% for hottag in hottag_cates %}
+<div class="panel panel-default">
+  <div class="panel-body">
+    <form class="form-horizontal" role="form">
+      {% csrf_token %} 
+
+    <div class="row">
+		<div class="col-md-2">
+			<input disabled="True" type="text" class="form-control" value="{{ hottag.hottag_category}}">
+		</div>
+		<div class="col-md-8">
+			<input type="text"  class="form-control input-lg tagsinput" value="{{ hottag.hottag_list|joinby:'tag_name'}}">
+		</div>
+     <button type="button" class="delete btn btn-primary btn-lg" hottag_id="{{hottag.hottag_id}}">
+     	Delete
+     </button>
+	</div>
+  </form>
+  </div>
+</div>
+	
+
+	{% endfor %}
+{% endif %}
+<div id="Hottag_warning" class="alert alert-danger" style="display: none;"></div>
+<button id="add" type="button" class="btn btn-info btn-lg">
+  <span class="glyphicon glyphicon-plus"></span> 
+  添加新的热门标签
+</button>
+{% endblock %}
+
+
+
+{% block css_script %}
+<link href="{{ STATIC_URL }}css/jquery.tagsinput.css" rel="stylesheet">
+<script src="{{ STATIC_URL }}js/jquery.tagsinput.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+
+
+ $(".tagsinput").tagsInput();
+
+  function deleteForm(btn) {
+      // Delete the panel
+      var hottag_id = $(btn).attr("hottag_id");
+
+      if(hottag_id != undefined){
+      $.ajax(
+                {
+                      type: 'GET',
+                      url: '/delete/hottag',
+                      data: {
+                          "id":hottag_id
+                      },
+                      dateType: 'json',
+                      async: false,
+                      success: function(data){
+                          json_data = JSON.parse(data)
+                         
+                          if(json_data.ok) {
+                            $(btn).parents('.panel').remove();
+                          }
+                          else {
+                              make_warning('#Hottag_warning', json_data.msg);
+                          }
+                      },
+                      error: function(XmlHttprequest, textStatus, errorThrown){
+                          make_warning('#Hottag_warning', '发生错误，请稍后再试');
+                      }
+                  }
+              );
+    } else{
+      make_warning('#Hottag_warning', 'id undefined!');
+    }
+}
+
+  function addNewHotTag(tag_input,cate_input){
+
+    tags = $(tag_input).val();
+    cate = $(cate_input).val();
+
+    if(tags.length===0 || cate.length === 0) {
+      make_warning("#Hottag_warning", '标签不能为空啦~~');
+      return;
+    }
+
+    $.ajax(
+              {
+                    type: 'POST',
+                    url: '/create/hottag',
+                    data: {
+                        cate: cate,
+                        tags: tags,
+                        csrfmiddlewaretoken: get_csrf()
+                    },
+                    dateType: 'json',
+                    async: false,
+                    success: function(data){
+                        json_data = JSON.parse(data)
+                       
+                        if(json_data.ok) {
+                          window.location.reload(true);
+
+                        }
+                        else {
+                            make_warning('#Hottag_warning', json_data.msg);
+                        }
+                    },
+                    error: function(XmlHttprequest, textStatus, errorThrown){
+                        make_warning('#Hottag_warning', '发生错误，请稍后再试');
+                    }
+                }
+            );
+
+  }
+
+    function addForm() {
+
+      if($(".panel-info").length >= 2){
+
+        make_warning("#Hottag_warning","一个个来嘛~~");
+        return;
+      }
+
+      var timestamp = (new Date()).valueOf().toString();
+      var input_id = "input_" + timestamp
+      var tag_input_id = "tagsinput_" + timestamp;
+
+      // Clone a form (without event handlers) from the first form
+      var row = $(".panel:first").clone(false).get(0);
+      // Insert it after the last form
+      $(row).removeAttr('style').hide().insertAfter(".panel:last").slideDown(300);
+
+      $(row).find('.input-lg').attr("id",tag_input_id);
+      $(row).find('.emo').attr("id",input_id)
+
+      $("#" + tag_input_id).tagsInput();
+
+      $(".addhottag").click(function() {
+        return addNewHotTag("#" + tag_input_id,"#" + input_id);
+      });
+      // Add an event handler for the delete item/form link 
+      $(row).find('.delete').click(function() {
+        return deleteForm(this);
+      });
+
+  }
+
+  // Register the click event handlers
+  $("#add").click(function() {
+    return addForm(this, 'form');
+  });
+  
+  $(".delete").click(function() {
+    return deleteForm(this);
+  });
+
+  function make_warning(obj, text) {
+    $(obj).text(text);
+    $(obj).show(100);
+}
+  function get_csrf(){
+      return $('input[name=csrfmiddlewaretoken]').attr('value');
+  }
+});
+</script>
+{% endblock %}

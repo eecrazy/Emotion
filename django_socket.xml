@@ -1,0 +1,7 @@
+<uwsgi>
+    <socket>:8077</socket>
+    <chdir>/home/emoj/www/emooksever</chdir>
+    <module>django_wsgi</module>
+    <processes>5</processes> <!-- 进程数 --> 
+    <daemonize>/home/emoj/www/emooksever/logs/uwsgi.log</daemonize>
+</uwsgi>

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+
+
+<button type="button" id="sents">
+    <span>send</span>
+</button>
+<script src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
+
+<script>
+
+var data = {
+   "emo_type":2,
+   "emo_id":3,                 
+   "tags":[
+       "great",
+       "fantastic"
+    ]
+}
+
+// var data = {
+//    "emo_type":1,
+//    "emo_detail":"看星星",                  
+//    "tags":[
+//        "great",
+//        "stars",
+//        "world"
+//     ]
+// }
+
+// $(document).ready(function(){
+//   $("#send").click(function(){
+
+//   });
+// });
+
+
+    $(function () {
+
+        $("#sents").click(
+            function(){
+              $.ajax({
+                url:"http://182.92.80.22:8000/anotate_emo/",
+                data:data,
+                type:"POST",
+                success:function(doc){
+                console.log(doc);
+              }})
+    })
+      });
+
+
+</script>
+</body> 
+</html>

@@ -1,0 +1,209 @@
+{% extends "base_head.html" %}
+{% block title %} Login {% endblock %}
+
+{% block content %}
+<!-- <div class="container">
+    <div class="row">
+        <div class="col-md-7">
+
+            <div class="jumbotron">
+                <img width="300px" height="300px" src="{{STATIC_URL}}img/code.jpg">
+                <p>让我们用逗脸调戏这个世界</p>
+            </div>
+        </div>
+		
+		
+
+        <div class="col-md-5" style="margin:10px auto;">
+            <div id="carousel-example-captions" class="carousel slide" data-ride="carousel" style="width:100%;height:50%;">
+                <ol class="carousel-indicators">
+                    <li data-target="#carousel-example-captions" data-slide-to="0" class="active"></li>
+                    <li data-target="#carousel-example-captions" data-slide-to="1" class=""></li>
+                    <li data-target="#carousel-example-captions" data-slide-to="2" class=""></li>
+                </ol>
+                <div class="carousel-inner" role="listbox">
+                    <div class="item active">
+                        <img src="{{ STATIC_URL }}img/emo1.jpg">
+                        <div class="carousel-caption">
+                        </div>
+                    </div>
+                    <div class="item">
+                        <img  src="{{ STATIC_URL }}img/emo2.jpg">
+                        <div class="carousel-caption">
+                        </div>
+                    </div>
+                    <div class="item">
+                        <img src="{{ STATIC_URL }}img/emo3.jpg">
+                        <div class="carousel-caption">
+                        </div>
+                    </div>
+                </div>
+                <a class="left carousel-control" href="#carousel-example-captions" role="button" data-slide="prev">
+                    <span class="glyphicon glyphicon-chevron-left"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="right carousel-control" href="#carousel-example-captions" role="button" data-slide="next">
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div> -->
+
+<br />
+<br />
+<div class="container" align="center">
+	<div class="row">
+		<div class="col-md-5">
+			<table align="right">
+				<tr>
+					<td>
+						<tr>
+							<td>
+								<br />
+								<img src="{{STATIC_URL}}img/logo_72_72px.png" height="72" />
+								<br />
+								<br />
+							</td>
+						</tr>
+						<tr>
+							<td font-family="黑体" color="#333" align="left">
+								<b>逗</b> 汇集作者的原创表情
+								<br />
+								<br />
+							</td>
+						</tr>
+						<tr>
+							<td color="#999" align="left">
+								让我们调戏这个世界
+								<br />
+								<br />
+							</td>
+						</tr>
+						<tr>
+							<td width="240">
+								<a class="button-download download-android primary" href="{{ STATIC_URL }}apk/emook.apk">
+									<img width="210" src="{{STATIC_URL}}img/android_download.png" alt="Android" />
+								</a>
+							</td>
+							<td rowspan="2">
+								<img src="{{STATIC_URL}}img/doulian-code.png" alt="扫描二维码下载" height="140" />
+							</td>
+						</tr>
+						<tr>
+							<td width="240">
+								<a class="button-download download-ios primary" href="#">
+									<img width="210" src="{{STATIC_URL}}img/ios_download.png" alt="App Store" />
+								</a>
+							</td>
+						</tr>
+						<tr>
+							<td width="36">
+								<br />
+								<a href="http://weibo.com/doulianemook" target="_blank">
+									<img width="36" src="{{STATIC_URL}}img/weibo.png" alt="Weibo" />
+								</a>
+								<a href="http://site.douban.com/245990/" target="_blank">
+									<img width="36" src="{{STATIC_URL}}img/douban.png" alt="Douban" />
+								</a>
+							</td>
+						</tr>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div class="col-md-5">
+			<table align="center">
+				<tr>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-1.gif"/>
+					</td>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-2.gif"/>
+					</td>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-3.gif"/>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-4.gif"/>
+					</td>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-5.gif"/>
+					</td>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-6.gif"/>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-7.gif"/>
+					</td>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-8.gif"/>
+					</td>
+					<td>
+						<img width="120" src="{{STATIC_URL}}img/sexingren/sexingren-9.gif"/>
+					</td>
+				</tr>
+		</table>
+		</div>
+	</div>
+</div>
+<!-- 
+<div class="container">
+	<div text-align="center" width="50%">
+		<table>
+			<tr>
+				<td>
+					<p><font size="28" color="#333">逗脸</font><font size="20" color="#444">汇集作者的原创表情</font></p>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<p><font size="20" color="#999">让我们用逗脸调戏这个世界</font></p>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="app-download-buttons">
+		<a class="button-download download-android primary" href="{{ STATIC_URL }}apk/emook.apk">
+			<img src="{{STATIC_URL}}img/android_download.png" alt="Android" />
+		</a>
+		<a class="button-download download-ios primary" href="#">
+			<img src="{{STATIC_URL}}img/ios_download.png" alt="App Store" />
+		</a>
+	</div>
+	<div class="app-download-qrcode">
+		<img src="{{STATIC_URL}}img/code.jpg" alt="扫描二维码下载" height="140" />
+	</div>
+</div> -->
+
+<!-- Modal sign in -->
+{% include "signin.html" %}
+<!-- modal sign in -->
+
+<!-- modal register -->
+{% include "signup.html" %}
+<!-- end of modal register -->
+{% block css_script %}
+    <script src="{{ STATIC_URL }}js/siteuser.js"></script>
+{% endblock %}
+<script type="text/javascript">
+$(function() {
+    // $(".btn_login").click(function(){
+
+        
+
+        
+    // });
+   
+});
+
+</script>
+{% endblock %}
+
+

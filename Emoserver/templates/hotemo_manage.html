@@ -1,0 +1,211 @@
+{% extends "base_manage.html" %}
+{% load upload_tags %}
+
+{% block display %}
+<h2>热门表情列表</h2>
+
+
+<div class="panel panel-info" style="display:none;" >
+  <div class="panel-body">
+    <form   class="form-horizontal" role="form">
+        {% csrf_token %} 
+         <div class="input-group">
+            <div class="input-group-btn">
+                <select class="form-control">
+                    <option value="2">动画表情</option>
+                    <option value="1">icon表情</option>
+                </select>
+            </div><!-- /btn-group -->
+            
+            <input type="text" class="form-control emo" placeholder="标签名称,如: 搞笑">
+            
+            </div><!-- /input-group -->
+            <input type="text" class="form-control input-lg">
+            <br/>
+            <button type="button" class="btn btn-primary btn-lg addhotemo">
+            创建新热门
+           </button>
+  </form>
+  </div>
+  </div>
+
+
+
+
+
+{% if hotemo_cates %}
+	{% for hotemo in hotemo_cates %}
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="row">
+		<div class="col-md-2">
+			<input type="text" disabled="True" class="form-control" value="{{ hotemo.hotemo_category}}">
+		</div>
+		<div class="col-md-8">
+			<div class="row">
+        {% for emo in hotemo.hotemo_list.all %}
+	{% if emo.emo_img %}
+        <div class="col-md-1">
+          <img src="{{emo.emo_img.url}}" width="40px" height="40px">
+        </div>
+	{% endif %}
+        {% endfor%}
+      </div>
+		</div>
+    <div class="col-md-2">
+     <button type="button" class="delete btn btn-primary btn-lg" hotemo_id="{{ hotemo.hotemo_id}}">
+     	Delete
+     </button>
+    </div>
+	</div>
+  </div>
+</div>
+	
+
+	{% endfor %}
+{% endif %}
+<div id="HotEmoWarning" class="alert alert-danger" style="display: none;"></div>
+<button id="add" type="button" class="btn btn-info btn-lg">
+  <span class="glyphicon glyphicon-plus"></span> 
+  添加新的热门标签
+</button>
+
+{% endblock %}
+
+
+
+{% block css_script %}
+<link href="{{ STATIC_URL }}css/jquery.tagsinput.css" rel="stylesheet">
+<script src="{{ STATIC_URL }}js/jquery.tagsinput.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+
+
+  function deleteForm(btn) {
+      // Delete the panel
+      var hotemo_id = $(btn).attr("hotemo_id");
+
+      if(hotemo_id != undefined){
+      $.ajax(
+                {
+                      type: 'GET',
+                      url: '/delete/hotemo',
+                      data: {
+                          "id":hotemo_id
+                      },
+                      dateType: 'json',
+                      async: false,
+                      success: function(data){
+                          json_data = JSON.parse(data)
+                         
+                          if(json_data.ok) {
+                            $(btn).parents('.panel').remove();
+                          }
+                          else {
+                              make_warning('#HotEmoWarning', json_data.msg);
+                          }
+                      },
+                      error: function(XmlHttprequest, textStatus, errorThrown){
+                          make_warning('#HotEmoWarning', '发生错误，请稍后再试');
+                      }
+                  }
+              );
+    } else{
+      make_warning('#HotEmoWarning', 'id undefined!');
+    }
+}
+
+  function addNewHotEmo(tag_input,cate_input,select_id){
+
+    cate = $(cate_input).val();
+    tags = $(tag_input).val();
+    emo_type = $(select_id).val()
+
+    if(tags.length===0 || cate.length===0 ) {
+      make_warning("#HotEmoWarning", '标签不能为空啦~~');
+      return;
+    }
+
+    $.ajax(
+              {
+                    type: 'POST',
+                    url: '/create/hotemo',
+                    data: {
+                        emo_type: emo_type,
+                        emo_tag: tags,
+                        cate:cate,
+                        csrfmiddlewaretoken: get_csrf()
+                    },
+                    dateType: 'json',
+                    async: false,
+                    success: function(data){
+                        json_data = JSON.parse(data)
+                       
+                        if(json_data.ok) {
+                          window.location.reload(true);
+
+                        }
+                        else {
+                            make_warning('#HotEmoWarning', json_data.msg);
+                        }
+                    },
+                    error: function(XmlHttprequest, textStatus, errorThrown){
+                        make_warning('#HotEmoWarning', '发生错误，请稍后再试');
+                    }
+                }
+            );
+}
+  function addForm() {
+
+      if($(".panel-info").length >= 2){
+
+        make_warning("#HotEmoWarning","一个个来嘛~~");
+        return;
+      }
+
+      var timestamp = (new Date()).valueOf().toString();
+      var input_id = "input_" + timestamp
+      var tag_input_id = "tagsinput_" + timestamp;
+      var select_id = "select_" + timestamp
+
+      // Clone a form (without event handlers) from the first form
+      var row = $(".panel:first").clone(false).get(0);
+      // Insert it after the last form
+      $(row).removeAttr('style').hide().insertAfter(".panel:last").slideDown(300);
+
+      $(row).find('.input-lg').attr("id",tag_input_id);
+      $(row).find('input.emo').attr("id",input_id);
+      $(row).find('select').attr("id",select_id)
+
+      $("#" + tag_input_id).tagsInput();
+
+      $(".addhotemo").click(function() {
+        return addNewHotEmo("#" + tag_input_id,"#" + input_id,"#" + select_id);
+      });
+      // Add an event handler for the delete item/form link 
+      $(row).find('.delete').click(function() {
+        return deleteForm(this);
+      });
+
+  }
+
+  // Register the click event handlers
+  $("#add").click(function() {
+    return addForm(this, 'form');
+  });
+  
+  $(".delete").click(function() {
+    return deleteForm(this);
+  });
+
+  function make_warning(obj, text) {
+    $(obj).text(text);
+    $(obj).show(100);
+}
+  function get_csrf(){
+      return $('input[name=csrfmiddlewaretoken]').attr('value');
+  }
+
+});
+</script>
+{% endblock %}

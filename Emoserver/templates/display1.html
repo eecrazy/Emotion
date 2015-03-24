@@ -1,0 +1,118 @@
+{% extends "base_head.html" %}
+{%block title%} diplay {% endblock %}
+
+{%block css_script %}
+<link href="{{ STATIC_URL }}css/jquery.tagsinput.css" rel="stylesheet">
+<style type="text/css">
+    .imgbox {
+        background-color: #ffffff;
+        padding: 10px;
+        margin-bottom: 10px;
+        -webkit-box-shadow: 0 8px 6px -6px #999;
+        -moz-box-shadow: 0 8px 6px -6px #999;
+        box-shadow: 0 8px 6px -6px #999;
+    }
+    .imgtags {
+        border-top: 1px solid #dadada;
+        padding-top: 5px;
+    }
+
+</style>
+<script src="{{ STATIC_URL }}js/jquery.tagsinput.js"></script> 
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <ul class="nav nav-pills nav-stacked" style="padding-top:10px;">
+                <li style="background-color: #44D5F2;"><a href="#"><i class="fa fa-home fa-fw"></i>Home</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-list-alt fa-fw"></i>Widgets</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-file-o fa-fw"></i>Pages</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-bar-chart-o fa-fw"></i>Charts</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-table fa-fw"></i>Table</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-tasks fa-fw"></i>Forms</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-calendar fa-fw"></i>Calender</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-book fa-fw"></i>Library</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-pencil fa-fw"></i>Applications</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-cogs fa-fw"></i>Settings</a>
+                </li>
+            </ul>
+            <ul class="nav nav-pills nav-stacked" style="padding-top:10px;">
+                <li style="background-color: #44D5F2;"><a href="#"><i class="fa fa-home fa-fw"></i>Home</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-list-alt fa-fw"></i>Widgets</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-file-o fa-fw"></i>Pages</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-bar-chart-o fa-fw"></i>Charts</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-table fa-fw"></i>Table</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-tasks fa-fw"></i>Forms</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-calendar fa-fw"></i>Calender</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-book fa-fw"></i>Library</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-pencil fa-fw"></i>Applications</a>
+                </li>
+                <li><a href="http://www.jquery2dotnet.com"><i class="fa fa-cogs fa-fw"></i>Settings</a>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-9">
+            {% if object_list %}
+            {% for emo in object_list %} 
+            {% if emo.emo_img %}
+            <div class="col-md-3 column imgbox">
+                <img width="200px" height="200px" src="{{emo.emo_img.url}}" class="img-responsive" />
+                <div class="imgtags">
+                    <input class="form-control tag_form" value="hell,world,well">
+                </div>
+            </div>
+            {% endif %} 
+            {% endfor%} 
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+<div class="container pull-right">
+    <ul class="pagination">
+        <li>
+
+            <a href="#">&laquo;</a>
+            <li>
+                <li class="disabled"><a href="#">&laquo;</a>
+                </li>
+                <li class="active"><a href="#">1 <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="disabled"><a href="#">1 <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="disabled"><a href="#">1 <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="disabled"><a href="#">1 <span class="sr-only">(current)</span></a>
+                </li>
+    </ul>
+</div>
+
+
+<script type="text/javascript">
+    $(function () {
+        $(".tag_form").tagsInput();
+        // body...
+    });
+</script>
+{% endblock%}
