@@ -87,7 +87,6 @@ def get_latest_emo_info(Emotion_Object):
 			tag_dict = dict()
 			tag_dict["id"] = tag.tag_id
 			tag_dict["name"] = tag.tag_name
-
 			ret_data["tags"].append(tag_dict)
 
 		return HttpResponse(json.dumps(ret_data))
@@ -209,6 +208,8 @@ def get_hotemos(request):
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
+
+
 @admin_needed(login_url="/")
 def CreateHotemo(request):
 	if request.POST:
@@ -293,6 +294,8 @@ def DeleteHottag(request):
 			return HttpResponse(json.dumps({"ok":False,"msg":"删除失败"}))
 	else:
 		return HttpResponse(json.dumps({"ok":False,"msg":"该热门标签组不存在"}))
+
+
 #/app/updatetemap?_t=20140201222
 
 # {
@@ -333,7 +336,7 @@ def get_user_by_id(uid):
 	return user_object
 
 
-
+#update emo-tag  map
 def updateetmap(request,cursor):
 	cursor = long(cursor)
 	emo_tag_map = Emotion.objects.filter(emo_last_update__gt=cursor).order_by("emo_last_update")[:2000]
@@ -398,6 +401,7 @@ def updateetmap(request,cursor):
 #    "next_cusor":20140405     //下次请求的timestamp
 # }
 
+#update tag-emo map
 def updatetemap(request,cursor):
 
 	cursor = long(cursor)
@@ -490,4 +494,12 @@ def addtag(request):
 						tag_object.emo_list.add(emo_object)
 						tag_object.save()
 						return ret_status(200)
+	return ret_status(400)
+
+
+def search_emos_by_author(request):
+	return ret_status(400)
+
+
+def search_emos_by_tag(request):
 	return ret_status(400)

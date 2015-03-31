@@ -13,6 +13,14 @@ urlpatterns = patterns('',
 	url(r'', include('Emoserver.users.urls')),
 	url(r'^anotate_emo/$',ajax.annoate_emotion),
 
+	#search API
+	#search emos by author
+	#/app/search/author=xxx&sortby=1&page=1&count=50
+	url(r'^app/search/author=.*&sortby=[1-2]{1}&page=(\d+)&count=(\d+)$',ajax.search_emos_by_author),
+	#search emos by tag
+	#/app/search/tag=xxx&sortby=1&page=1&count=50
+	url(r'^app/search/tag=.*&sortby=[1-2]{1}&page=(\d+)&count=(\d+)$',ajax.search_emos_by_tag),
+
 	#get hot emo and hot tag
 	url(r'^app/gethotemos$',ajax.get_hotemos),
 	url(r'^app/gethottags$',ajax.get_hottags),
