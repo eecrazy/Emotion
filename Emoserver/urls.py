@@ -16,10 +16,14 @@ urlpatterns = patterns('',
 	#search API
 	#search emos by author
 	#/app/search/author=xxx&sortby=1&page=1&count=50
-	url(r'^app/search/author=.*&sortby=[1-2]{1}&page=(\d+)&count=(\d+)$',ajax.search_emos_by_author),
+	url(r'^app/search/author=.*&sortby=[1-2]{1}&page=\d+&count=\d+$',ajax.search_emos_by_author),
 	#search emos by tag
 	#/app/search/tag=xxx&sortby=1&page=1&count=50
-	url(r'^app/search/tag=.*&sortby=[1-2]{1}&page=(\d+)&count=(\d+)$',ajax.search_emos_by_tag),
+	url(r'^app/search/tag=.*&sortby=[1-2]{1}&page=\d+&count=\d+$',ajax.search_emos_by_tag),
+
+	#wechat share api
+	# /app/share/emoid=1
+	url(r'^app/share/emoid=\d+$',ajax.emo_share),
 
 	#get hot emo and hot tag
 	url(r'^app/gethotemos$',ajax.get_hotemos),

@@ -60,6 +60,7 @@ def lookuporinsert_emo(emotion):
 		return emo_object
 	return None
 
+'''
 # {
 #    "status":200,           
 # //状态码可以为200,400.200表示保存成功 400表示失败
@@ -72,7 +73,7 @@ def lookuporinsert_emo(emotion):
 # 	   2:"football"
 # 	}
 # }
-
+'''
 
 def get_latest_emo_info(Emotion_Object):
 
@@ -95,7 +96,7 @@ def get_latest_emo_info(Emotion_Object):
 def ret_status(status):
 	return HttpResponse(json.dumps({"status":status}))
 
-
+'''
 #app side user annotate the emotion
 #the server sider save the annotation and 
 #return the latest tags the app side	
@@ -112,6 +113,7 @@ def ret_status(status):
 # 	   "football"
 # 	]
 # }
+'''
 @csrf_exempt
 def annoate_emotion(request):
 	if request.POST:
@@ -153,7 +155,7 @@ def annoate_emotion(request):
 		except:
 			return ret_status(400)
 	return ret_status(400)
-
+'''
 # {
 #    "status":200,           //状态码可以为200,400.200表示成功
 # //400表示失败,失败不传回数据
@@ -162,6 +164,7 @@ def annoate_emotion(request):
 #    "篮球":[2,25,46], //表情的类别名，表情的ID编号列表
 #    },
 # }
+'''
 def get_hottags(request):
 	#if request.is_ajax():
 	all_hottags = HotTags.objects.all()
@@ -180,7 +183,7 @@ def get_hottags(request):
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
-
+'''
 # {
 #    "status":200,           //状态码可以为200,400.200表示成功
 # //400表示失败,失败不传回数据
@@ -189,7 +192,7 @@ def get_hottags(request):
 #    "篮球":[2,25,46], //表情的类别名，表情的ID编号列表
 #    ],
 # }
-
+'''
 def get_hotemos(request):
 	#if request.is_ajax():
 	all_hotemos = HotEmos.objects.all()
@@ -295,9 +298,8 @@ def DeleteHottag(request):
 	else:
 		return HttpResponse(json.dumps({"ok":False,"msg":"该热门标签组不存在"}))
 
-
+'''
 #/app/updatetemap?_t=20140201222
-
 # {
 #    "status":200,           //状态码可以为200,400.200表示成功
 # //400表示失败,失败不传回数据
@@ -319,7 +321,7 @@ def DeleteHottag(request):
 #    "next_cusor":20140405     //下次请求的timestamp
 
 # }
-
+'''
 
 def get_username_by_id(uid):
 	try:
@@ -331,6 +333,13 @@ def get_username_by_id(uid):
 def get_user_by_id(uid):
 	try:
 		user_object = SiteUser.objects.get(pk = uid)
+	except User.DoesNotExist:
+		return None
+	return user_object
+
+def get_user_by_username(uname):
+	try:
+		user_object = SiteUser.objects.get(username = uname )
 	except User.DoesNotExist:
 		return None
 	return user_object
@@ -384,7 +393,7 @@ def updateetmap(request,cursor):
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
-
+'''
 # {
 #    "status":200,           //状态码可以为200,400.200表示成功
 # //400表示失败,失败不传回数据
@@ -400,7 +409,7 @@ def updateetmap(request,cursor):
 #    ],
 #    "next_cusor":20140405     //下次请求的timestamp
 # }
-
+'''
 #update tag-emo map
 def updatetemap(request,cursor):
 
@@ -497,9 +506,113 @@ def addtag(request):
 	return ret_status(400)
 
 
+#search api 
+'''  按作者搜索表情
+/app/search/author=xxx&sortby=1&page=1&count=50
+//作者（base64编码），按照热度|时间排序（1为热度，2为时间），页码，每页返回的数目
+返回的结果
+{"status": 200,
+"author":1110310214",
+"emos": [
+{"emo_type": 2, //表情类型
+"tags": [
+{"id": 1804, "name": "\u9ad8\u5174","popularity":2},//表情的标签信息
+{"id": 2221, "name": "happy","tag_popularity":3}
+],
+"emo_id": 2032, //表情ID
+"emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
+"is_deleted": false,//是否已删除
+"emo_popularity": 0,//热度
+"emo_like": 0//收藏数
+},
+......
+],
+"total_num":300,
+"next_page":2
+}
+'''
 def search_emos_by_author(request):
+	request_body=request.path
+	seg=request_body.strip().split("/")
+	info=seg[3].split("&")
+	username=info[0].split("=")[1]
+	sortby=info[1].split("=")[1]
+	page=info[2].split("=")[1]
+	count=info[3].split("=")[1]
+	cur_user=get_user_by_username(username)
+	uid=cur_user.id
+	ret_data={}
+
+	if sortby=="1":
+		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("emo_popularity")
+	else:
+		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("emo_last_update")
+	if all_emos:
+		ret_data = dict()
+		ret_data["status"] = 200
+		# author_info["email"]=
+		ret_data["author"]=username
+		ret_data["emos"]  = list()
+		for emo in all_emos:
+			tmpdict = dict()
+			tmpdict["emo_type"] = emo.emo_type
+			tmpdict["emo_id"] = emo.emo_id
+			tmpdict["emo_detail"] = emo.emo_content
+			tmpdict["is_deleted"] = emo.emo_bool_deleted
+			tmpdict["emo_popularity"] = emo.emo_popularity
+			tmpdict["emo_like"] = emo.emo_like_num
+			tmpdict["tags"] = list()
+			tags=emo.emo_tag_list.all()
+			for tag in tags:
+				tag_dict={}
+				tag_dict["id"]=tag.tag_id
+				tag_dict["name"]=tag.tag_name
+				tag_dict["tag_popularity"]=tag.tag_popularity
+				tmpdict["tags"].append(tag_dict)
+			ret_data["emos"].append(tmpdict)
+		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
-
+'''按标签搜索表情
+/app/search/tag=xxx&sortby=1&page=1&count=50
+//标签（base64编码），按照热度|时间排序（1为热度，2为时间），页码，每页返回的数目
+{"status": 200,
+"emos": [
+{"emo_type": 2, //表情类型
+"tags": [
+{"id": 1804, "name": "\u9ad8\u5174"},//表情的标签信息
+{"id": 2221, "name": "happy"}
+],
+"emo_id": 2032, //表情ID
+"emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
+"emo_author": "nono_1984@163.com",//作者信息
+"is_deleted": false,//是否已删除
+"emo_popularity": 0,//热度
+"emo_like": 0//收藏数
+}
+],
+"total_num":300,//总数
+"next_page":2//下一页，如果为负值，则不存在下一页
+}
+'''
 def search_emos_by_tag(request):
+	all_hotemos = HotEmos.objects.all()
+
+	if all_hotemos:
+		ret_data = dict()
+
+		ret_data["status"] = 200
+		ret_data["categories"]  = list()
+		for hotemo in all_hotemos:
+			tmpdict = dict()
+			tmpdict["name"] = hotemo.hotemo_category
+			tmpdict["emos"] = [emo.emo_id for emo in hotemo.hotemo_list.all()]
+			#ret_data["categories"][hotemo.hotemo_category] = 
+			ret_data["categories"].append(tmpdict)
+		return HttpResponse(json.dumps(ret_data))
+	return ret_status(400)
+
+#wechat share api
+
+def emo_share(request):
 	return ret_status(400)
