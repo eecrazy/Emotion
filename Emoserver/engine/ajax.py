@@ -64,32 +64,45 @@ def lookuporinsert_emo(emotion):
 # {
 #    "status":200,           
 # //状态码可以为200,400.200表示保存成功 400表示失败
-#    "emo_id":310,           
+"emo_id":310,
+"emo_author":"lzy";
+"emo_id": 2032, //表情ID
+"emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
+"is_deleted": false,//是否已删除
+"emo_popularity": 0,//热度
+"emo_like": 0,//收藏数
+"last_update":,
+           
 # //仅当状态码为200时返回该表情的ID，如果用户//标注的表情在数据库
 # //中已存在，也会返回数据
 # //表情的标签列表,标签的ＩＤ,标签的内容 
-#    "tags":{                  
-# 	   1:"soccer",      
-# 	   2:"football"
-# 	}
+#    "tags":[
+{"id": 1804, "name": "\u9ad8\u5174","tag_popularity":2},//表情的标签信息
+{"id": 2221, "name": "happy","tag_popularity":3}
+],                 
+...
 # }
 '''
 
-def get_latest_emo_info(Emotion_Object):
+def get_latest_emo_info(emo):
 
-	if Emotion_Object:
+	if emo:
 		ret_data = dict()
 		ret_data["status"] =  200
-		ret_data["emo_id"] =  Emotion_Object.emo_id
-		
-		#get the tags
+		ret_data["emo_id"] =  emo.emo_id
+		ret_data["emo_author"]=get_username_by_id(emo.emo_id)
+		ret_data["emo_detail"] = emo.emo_content
+		ret_data["is_deleted"] = emo.emo_bool_deleted
+		ret_data["emo_popularity"] = emo.emo_popularity
+		ret_data["emo_like"] = emo.emo_like_num
+		ret_data["last_update"]=emo.emo_last_update
 		ret_data["tags"] = list()
-		for tag in Emotion_Object.emo_tag_list.all():
+		for tag in emo.emo_tag_list.all():
 			tag_dict = dict()
 			tag_dict["id"] = tag.tag_id
 			tag_dict["name"] = tag.tag_name
+			tag_dict["tag_popularity"]=tag.tag_popularity
 			ret_data["tags"].append(tag_dict)
-
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
@@ -326,7 +339,7 @@ def DeleteHottag(request):
 def get_username_by_id(uid):
 	try:
 		user_object = SiteUser.objects.get(pk = uid)
-	except User.DoesNotExist:
+	except:
 		return ""
 	return user_object.username
 
@@ -343,6 +356,12 @@ def get_user_by_username(uname):
 	except User.DoesNotExist:
 		return None
 	return user_object
+def get_tag_by_tagname(tagname):
+	try:
+		tag_object=Tag.objects.get(tag_name=tagname)
+	except Tag.DoesNotExist:
+		return None
+	return tag_object  
 
 
 #update emo-tag  map
@@ -516,14 +535,15 @@ def addtag(request):
 "emos": [
 {"emo_type": 2, //表情类型
 "tags": [
-{"id": 1804, "name": "\u9ad8\u5174","popularity":2},//表情的标签信息
+{"id": 1804, "name": "\u9ad8\u5174","tag_popularity":2},//表情的标签信息
 {"id": 2221, "name": "happy","tag_popularity":3}
 ],
 "emo_id": 2032, //表情ID
 "emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
 "is_deleted": false,//是否已删除
 "emo_popularity": 0,//热度
-"emo_like": 0//收藏数
+"emo_like": 0,//收藏数
+"last_update":
 },
 ......
 ],
@@ -537,23 +557,32 @@ def search_emos_by_author(request):
 	info=seg[3].split("&")
 	username=info[0].split("=")[1]
 	sortby=info[1].split("=")[1]
-	page=info[2].split("=")[1]
-	count=info[3].split("=")[1]
+	page=int(info[2].split("=")[1])
+	page_count=int(info[3].split("=")[1])
 	cur_user=get_user_by_username(username)
+	if cur_user==None:
+		return ret_status(400)
 	uid=cur_user.id
 	ret_data={}
-
 	if sortby=="1":
 		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("emo_popularity")
 	else:
 		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("emo_last_update")
+	count=0
 	if all_emos:
+		emos_num=all_emos.count()
 		ret_data = dict()
 		ret_data["status"] = 200
+		ret_data["total_num"]=emos_num
+		ret_data["next_page"]=int(page)+1
 		# author_info["email"]=
 		ret_data["author"]=username
 		ret_data["emos"]  = list()
-		for emo in all_emos:
+		min_index=(page-1)*page_count
+		max_index=page*page_count-1
+		for index,emo in enumerate(all_emos):
+			if index<min_index or index>max_index:
+				continue
 			tmpdict = dict()
 			tmpdict["emo_type"] = emo.emo_type
 			tmpdict["emo_id"] = emo.emo_id
@@ -561,6 +590,7 @@ def search_emos_by_author(request):
 			tmpdict["is_deleted"] = emo.emo_bool_deleted
 			tmpdict["emo_popularity"] = emo.emo_popularity
 			tmpdict["emo_like"] = emo.emo_like_num
+			tmpdict["last_update"]=emo.emo_last_update
 			tmpdict["tags"] = list()
 			tags=emo.emo_tag_list.all()
 			for tag in tags:
@@ -577,38 +607,70 @@ def search_emos_by_author(request):
 /app/search/tag=xxx&sortby=1&page=1&count=50
 //标签（base64编码），按照热度|时间排序（1为热度，2为时间），页码，每页返回的数目
 {"status": 200,
+"tag":{"id": 2221, "name": "happy","popularity":2,"is_deleted":false,"last_update":1427770195168},//搜索的标签信息
 "emos": [
 {"emo_type": 2, //表情类型
-"tags": [
-{"id": 1804, "name": "\u9ad8\u5174"},//表情的标签信息
-{"id": 2221, "name": "happy"}
-],
 "emo_id": 2032, //表情ID
 "emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
 "emo_author": "nono_1984@163.com",//作者信息
 "is_deleted": false,//是否已删除
 "emo_popularity": 0,//热度
-"emo_like": 0//收藏数
-}
+"emo_like": 0,//收藏数
+"last_update":1427770195168 //最后更新时间戳
+},
+...
 ],
 "total_num":300,//总数
 "next_page":2//下一页，如果为负值，则不存在下一页
 }
 '''
 def search_emos_by_tag(request):
-	all_hotemos = HotEmos.objects.all()
+	request_body=request.path
+	seg=request_body.strip().split("/")
+	info=seg[3].split("&")
+	tag_name=info[0].split("=")[1]
+	sortby=info[1].split("=")[1]
+	page=int(info[2].split("=")[1])
+	page_count=int(info[3].split("=")[1])
+	cur_tag=get_tag_by_tagname(tag_name)
+	if cur_tag==None:
+		return ret_status(400)
+	tag_id=cur_tag.tag_id
+	ret_data={}
 
-	if all_hotemos:
+	if sortby=="1":
+		all_emos=cur_tag.emo_list.all()
+	else:
+		all_emos=cur_tag.emo_list.all()
+	count=0
+	if all_emos:
+		emos_num=all_emos.count()
 		ret_data = dict()
-
 		ret_data["status"] = 200
-		ret_data["categories"]  = list()
-		for hotemo in all_hotemos:
+		ret_data["total_num"]=emos_num
+		ret_data["next_page"]=int(page)+1
+		ret_data["emos"]  = list()
+		ret_data["tag"]={}		
+		ret_data["tag"]["id"]=cur_tag.tag_id
+		ret_data["tag"]["name"]=cur_tag.tag_name
+		ret_data["tag"]["popularity"]=cur_tag.tag_popularity
+		ret_data["tag"]["is_deleted"]=cur_tag.tag_bool_deleted
+		ret_data["tag"]["last_update"]=cur_tag.tag_last_update
+		min_index=(page-1)*page_count
+		max_index=page*page_count-1
+		for index,emo in enumerate(all_emos):
+			if index<min_index or index>max_index:
+				continue
 			tmpdict = dict()
-			tmpdict["name"] = hotemo.hotemo_category
-			tmpdict["emos"] = [emo.emo_id for emo in hotemo.hotemo_list.all()]
-			#ret_data["categories"][hotemo.hotemo_category] = 
-			ret_data["categories"].append(tmpdict)
+			tmpdict["author"]=get_username_by_id(emo.emo_id)
+			tmpdict["emo_type"] = emo.emo_type
+			tmpdict["emo_id"] = emo.emo_id
+			tmpdict["emo_detail"] = emo.emo_content
+			tmpdict["is_deleted"] = emo.emo_bool_deleted
+			tmpdict["emo_popularity"] = emo.emo_popularity
+			tmpdict["emo_like"] = emo.emo_like_num
+			tmpdict["last_update"]=emo.emo_last_update
+			ret_data["emos"].append(tmpdict)
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
