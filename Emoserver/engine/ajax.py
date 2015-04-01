@@ -570,10 +570,10 @@ def search_emos_by_author(request):
 		return ret_status(400)
 	uid=cur_user.id
 	ret_data={}
-	if sortby=="1":
-		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("emo_popularity")
-	else:
-		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("emo_last_update")
+	if sortby=="1": #热度，热度最高的排在最前面
+		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("-emo_popularity")
+	else:  #时间，最新更改的排在最前面
+		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("-emo_last_update")
 	count=0
 	if all_emos:
 		emos_num=all_emos.count()
@@ -592,7 +592,7 @@ def search_emos_by_author(request):
 			tmpdict = dict()
 			tmpdict["emo_type"] = emo.emo_type
 			tmpdict["emo_id"] = emo.emo_id
-			tmpdict["emo_detail"] = emo.emo_content
+			tmpdict["emo_detail"] = str(emo.emo_img)
 			tmpdict["is_deleted"] = emo.emo_bool_deleted
 			tmpdict["emo_popularity"] = emo.emo_popularity
 			tmpdict["emo_like"] = emo.emo_like_num
@@ -647,10 +647,10 @@ def search_emos_by_tag(request):
 	tag_id=cur_tag.tag_id
 	ret_data={}
 
-	if sortby=="1":
-		all_emos=cur_tag.emo_list.all()
-	else:
-		all_emos=cur_tag.emo_list.all()
+	if sortby=="1": #热度，热度最高的排最前
+		all_emos=cur_tag.emo_list.all().order_by("-emo_popularity")
+	else:  #时间，最新更新的排最前
+		all_emos=cur_tag.emo_list.all().order_by("-emo_last_update")
 	count=0
 	if all_emos:
 		emos_num=all_emos.count()
@@ -674,7 +674,7 @@ def search_emos_by_tag(request):
 			tmpdict["author"]=get_username_by_id(emo.emo_id)
 			tmpdict["emo_type"] = emo.emo_type
 			tmpdict["emo_id"] = emo.emo_id
-			tmpdict["emo_detail"] = emo.emo_content
+			tmpdict["emo_detail"] = str(emo.emo_img)
 			tmpdict["is_deleted"] = emo.emo_bool_deleted
 			tmpdict["emo_popularity"] = emo.emo_popularity
 			tmpdict["emo_like"] = emo.emo_like_num
