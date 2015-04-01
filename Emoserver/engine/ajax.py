@@ -9,7 +9,7 @@ from django.db.models import Q
 from Emoserver.utils.decorators import admin_needed
 import operator
 import json
-
+from base64 import *
 EMO_TEXT = 1 
 EMO_MOTION = 2
 
@@ -346,20 +346,23 @@ def get_username_by_id(uid):
 def get_user_by_id(uid):
 	try:
 		user_object = SiteUser.objects.get(pk = uid)
-	except User.DoesNotExist:
+	# except User.DoesNotExist:
+	except:
 		return None
 	return user_object
 
 def get_user_by_username(uname):
 	try:
 		user_object = SiteUser.objects.get(username = uname )
-	except User.DoesNotExist:
+	# except "User.DoesNotExist":
+	except:
 		return None
 	return user_object
 def get_tag_by_tagname(tagname):
 	try:
 		tag_object=Tag.objects.get(tag_name=tagname)
-	except Tag.DoesNotExist:
+	# except Tag.DoesNotExist:
+	except:
 		return None
 	return tag_object  
 
@@ -555,6 +558,9 @@ def search_emos_by_author(request):
 	request_body=request.path
 	seg=request_body.strip().split("/")
 	info=seg[3].split("&")
+	'''加入base64编码
+	username=b64decode(info[0].replace("author=",""))
+	'''
 	username=info[0].split("=")[1]
 	sortby=info[1].split("=")[1]
 	page=int(info[2].split("=")[1])
@@ -628,6 +634,9 @@ def search_emos_by_tag(request):
 	request_body=request.path
 	seg=request_body.strip().split("/")
 	info=seg[3].split("&")
+	'''加入base64编码
+	tag_name=b64decode(info[0].replace("tag=",""))
+	'''
 	tag_name=info[0].split("=")[1]
 	sortby=info[1].split("=")[1]
 	page=int(info[2].split("=")[1])
