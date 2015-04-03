@@ -530,6 +530,7 @@ def addtag(request):
 
 #search api 
 '''  按作者搜索表情
+可能会返回已经被删除的表情
 /app/search/author=xxx&sortby=1&page=1&count=50
 //作者（base64编码），按照热度|时间排序（1为热度，2为时间），页码，每页返回的数目
 返回的结果
@@ -558,10 +559,10 @@ def search_emos_by_author(request):
 	request_body=request.path
 	seg=request_body.strip().split("/")
 	info=seg[3].split("&")
-	'''加入base64编码
+	#加入base64编码
 	username=b64decode(info[0].replace("author=",""))
-	'''
-	username=info[0].split("=")[1]
+	#没有base64编码
+	# username=info[0].split("=")[1]
 	sortby=info[1].split("=")[1]
 	page=int(info[2].split("=")[1])
 	page_count=int(info[3].split("=")[1])
@@ -634,10 +635,10 @@ def search_emos_by_tag(request):
 	request_body=request.path
 	seg=request_body.strip().split("/")
 	info=seg[3].split("&")
-	'''加入base64编码
+	#加入base64编码
 	tag_name=b64decode(info[0].replace("tag=",""))
-	'''
-	tag_name=info[0].split("=")[1]
+	#没有base64编码
+	# tag_name=info[0].split("=")[1]
 	sortby=info[1].split("=")[1]
 	page=int(info[2].split("=")[1])
 	page_count=int(info[3].split("=")[1])
@@ -683,7 +684,40 @@ def search_emos_by_tag(request):
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
-#wechat share api
-
+#emo share api
+#是否需要登录用户？
+'''
+/app/share/emoid=1&type=1 // 微信转发
+/app/share/emoid=2&type=2// 朋友圈分享
+/app/share/emoid=2&type=3// 微博分享
+/app/share/emoid=2&type=4 // 用户收藏
+??如果成功返回{"status": 200},否则返回{"status": 400}
+'''
 def emo_share(request):
-	return ret_status(400)
+	request_body=request.path
+	seg=request_body.strip().split("/")
+	info=seg[3].split("&")
+	emoid=info[0].split("=")[1]
+	share_type=info[1].split("=")[1]
+	try:
+		emo_object=Emotion.objects.get(emo_id=emoid)
+	except:
+		return ret_status(400)
+
+	data_dictionary={}
+	data_dictionary["emo_detail"]=emo_object.emo_img
+	emo_object.emo_popularity+=1
+	if share_type=="1":
+		emo_object.weixin_send_num+=1
+	elif share_type=="2":
+		emo_object.weixin_share_num+=1
+	elif share_type=="3":
+		emo_object.weibo_share_num+=1
+		emo_object.save()
+	else:
+		emo_object.emo_like_num+=1
+	emo_object.save()
+	return render_to_response("emo_share.html",data_dictionary,context_instance=RequestContext(request))
+
+
+

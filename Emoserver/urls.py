@@ -22,8 +22,8 @@ urlpatterns = patterns('',
 	url(r'^app/search/tag=.*&sortby=[1-2]{1}&page=\d+&count=\d+$',ajax.search_emos_by_tag),
 
 	#wechat share api
-	# /app/share/emoid=1
-	url(r'^app/share/emoid=\d+$',ajax.emo_share),
+	# /app/share/emoid=1&type=1 
+	url(r'^app/share/emoid=\d+&type=[1-4]{1}$',ajax.emo_share),
 
 	#get hot emo and hot tag
 	url(r'^app/gethotemos$',ajax.get_hotemos),

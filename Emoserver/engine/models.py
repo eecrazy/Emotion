@@ -105,6 +105,10 @@ class Emotion(models.Model):
 
 	emo_popularity = models.IntegerField(default=0)
 	emo_like_num = models.IntegerField(default=0)
+	weibo_share_num = models.IntegerField(default=0)
+	weixin_share_num = models.IntegerField(default=0)
+	weixin_send_num = models.IntegerField(default=0)
+
 	emo_bool_deleted = models.BooleanField(default=False)
 	emo_last_update = models.BigIntegerField(db_index=True)
 
