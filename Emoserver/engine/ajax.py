@@ -170,6 +170,11 @@ def annoate_emotion(request):
 		except:
 			return ret_status(400)
 	return ret_status(400)
+
+
+
+
+
 '''
 # {
 #    "status":200,           //状态码可以为200,400.200表示成功
@@ -693,35 +698,63 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="5"):
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
-#emo share api
-#是否需要登录用户？
-'''
-/app/share/emoid=1&type=1 // 微信转发
-/app/share/emoid=2&type=2// 朋友圈分享
-/app/share/emoid=2&type=3// 微博分享
-/app/share/emoid=2&type=4 // 用户收藏
-??如果成功返回{"status": 200},否则返回{"status": 400}
-'''
-def emo_share(request,emoid,share_type):
+def get_emo_html(request,emoid):
 	try:
-		emo_object=Emotion.objects.get(emo_id=emoid)
+		emo_object=Emotion.objects.get(emo_id=int(emoid))
 	except:
 		return ret_status(400)
 
 	data_dictionary={}
 	data_dictionary["emo_detail"]=emo_object.emo_img
 
-	emo_object.emo_popularity+=1
-	if share_type=="1":
-		emo_object.weixin_send_num+=1
-	elif share_type=="2":
-		emo_object.weixin_share_num+=1
-	elif share_type=="3":
-		emo_object.weibo_share_num+=1
-	else:
-		emo_object.emo_like_num+=1
-	emo_object.save()
-	return render_to_response("emo_share.html",data_dictionary,context_instance=RequestContext(request))
+	return render_to_response("get_emo_html.html",data_dictionary,context_instance=RequestContext(request))
 
 
+
+'''
+{
+	"emo_id":"1",
+	"share_type":"1",
+}
+'''
+@csrf_exempt
+def save_share_info(request):
+	if request.POST:
+		try:
+			share_data = json.loads(request.body)
+		except:
+			return ret_status(400)
+		emo_id = share_data.get("emo_id",None)		
+		share_type = share_data.get("share_type",None)		
+		print share_data
+		emo_object = None
+		try:
+			if emo_id:
+				try:
+					emo_object = Emotion.objects.get(emo_id=int(emo_id))
+				except:
+					return ret_status(400)
+			else:
+				return ret_status(400)
+
+			if emo_object:
+				if share_type:
+					emo_object.emo_popularity+=1
+					if share_type=="1":
+						emo_object.weixin_send_num+=1
+					elif share_type=="2":
+						emo_object.weixin_share_num+=1
+					elif share_type=="3":
+						emo_object.weibo_share_num+=1
+					else:
+						emo_object.emo_like_num+=1				
+					emo_object.save()
+					return ret_status(200)
+				else:
+					return ret_status(400)
+			else:
+				return ret_status(400)
+		except:
+			return ret_status(400)
+	return ret_status(400)
 

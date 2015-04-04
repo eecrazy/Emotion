@@ -21,9 +21,11 @@ urlpatterns = patterns('',
 	#/app/search/tag=xxx&sortby=1&page=1&count=50
 	url(r'^app/search/tag=(?P<tag_name>.*)&sortby=(?P<sortby>[1-2]{1})&page=(?P<page>\d+)&count=(?P<page_count>\d+)$',ajax.search_emos_by_tag),
 
-	#wechat share api
-	# /app/share/emoid=1&type=1 
-	url(r'^app/share/emoid=(?P<emoid>\d+)&type=(?P<share_type>[1-4]{1})$',ajax.emo_share),
+	#return the emo html to share 
+	url(r'^app/share/emoid=(?P<emoid>\d+)$',ajax.get_emo_html),
+
+	#save the emo share info 
+	url(r'^app/share/save_share_info$',ajax.save_share_info),
 
 	#get hot emo and hot tag
 	url(r'^app/gethotemos$',ajax.get_hotemos),
