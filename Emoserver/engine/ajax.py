@@ -7,6 +7,8 @@ from models import Emotion,Tag,HotTags,HotEmos
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from Emoserver.utils.decorators import admin_needed
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 import operator
 import json
 from base64 import *
@@ -555,22 +557,18 @@ def addtag(request):
 "next_page":2
 }
 '''
-def search_emos_by_author(request):
-	request_body=request.path
-	seg=request_body.strip().split("/")
-	info=seg[3].split("&")
+def search_emos_by_author(request,username,sortby="1",page="1",page_count="5"):
 	#加入base64编码
-	username=b64decode(info[0].replace("author=",""))
-	#没有base64编码
-	# username=info[0].split("=")[1]
-	sortby=info[1].split("=")[1]
-	page=int(info[2].split("=")[1])
-	page_count=int(info[3].split("=")[1])
+	username=b64decode(username)
+	page=int(page)
+	page_count=int(page_count)
 	cur_user=get_user_by_username(username)
 	if cur_user==None:
 		return ret_status(400)
+
 	uid=cur_user.id
 	ret_data={}
+
 	if sortby=="1": #热度，热度最高的排在最前面
 		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("-emo_popularity")
 	else:  #时间，最新更改的排在最前面
@@ -585,11 +583,18 @@ def search_emos_by_author(request):
 		# author_info["email"]=
 		ret_data["author"]=username
 		ret_data["emos"]  = list()
-		min_index=(page-1)*page_count
-		max_index=page*page_count-1
-		for index,emo in enumerate(all_emos):
-			if index<min_index or index>max_index:
-				continue
+
+		paginator = Paginator(all_emos, page_count) # Show 25 sub_emos per page
+		try:
+			sub_emos = paginator.page(page)
+		except PageNotAnInteger:
+			# If page is not an integer, deliver first page.
+			sub_emos = paginator.page(1)
+		except EmptyPage:
+			# If page is out of range (e.g. 9999), deliver last page of results.
+			sub_emos = paginator.page(paginator.num_pages)
+
+		for emo in sub_emos:
 			tmpdict = dict()
 			tmpdict["emo_type"] = emo.emo_type
 			tmpdict["emo_id"] = emo.emo_id
@@ -607,6 +612,7 @@ def search_emos_by_author(request):
 				tag_dict["tag_popularity"]=tag.tag_popularity
 				tmpdict["tags"].append(tag_dict)
 			ret_data["emos"].append(tmpdict)
+
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
@@ -631,17 +637,11 @@ def search_emos_by_author(request):
 "next_page":2//下一页，如果为负值，则不存在下一页
 }
 '''
-def search_emos_by_tag(request):
-	request_body=request.path
-	seg=request_body.strip().split("/")
-	info=seg[3].split("&")
+def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="5"):
 	#加入base64编码
-	tag_name=b64decode(info[0].replace("tag=",""))
-	#没有base64编码
-	# tag_name=info[0].split("=")[1]
-	sortby=info[1].split("=")[1]
-	page=int(info[2].split("=")[1])
-	page_count=int(info[3].split("=")[1])
+	tag_name=b64decode(tag_name)
+	page=int(page)
+	page_count=int(page_count)
 	cur_tag=get_tag_by_tagname(tag_name)
 	if cur_tag==None:
 		return ret_status(400)
@@ -653,6 +653,8 @@ def search_emos_by_tag(request):
 	else:  #时间，最新更新的排最前
 		all_emos=cur_tag.emo_list.all().order_by("-emo_last_update")
 	count=0
+
+
 	if all_emos:
 		emos_num=all_emos.count()
 		ret_data = dict()
@@ -666,11 +668,18 @@ def search_emos_by_tag(request):
 		ret_data["tag"]["popularity"]=cur_tag.tag_popularity
 		ret_data["tag"]["is_deleted"]=cur_tag.tag_bool_deleted
 		ret_data["tag"]["last_update"]=cur_tag.tag_last_update
-		min_index=(page-1)*page_count
-		max_index=page*page_count-1
-		for index,emo in enumerate(all_emos):
-			if index<min_index or index>max_index:
-				continue
+
+		paginator = Paginator(all_emos, page_count) # Show 25 sub_emos per page
+		try:
+			sub_emos = paginator.page(page)
+		except PageNotAnInteger:
+			# If page is not an integer, deliver first page.
+			sub_emos = paginator.page(1)
+		except EmptyPage:
+			# If page is out of range (e.g. 9999), deliver last page of results.
+			sub_emos = paginator.page(paginator.num_pages)
+
+		for emo in sub_emos:
 			tmpdict = dict()
 			tmpdict["author"]=get_username_by_id(emo.emo_id)
 			tmpdict["emo_type"] = emo.emo_type
@@ -693,12 +702,7 @@ def search_emos_by_tag(request):
 /app/share/emoid=2&type=4 // 用户收藏
 ??如果成功返回{"status": 200},否则返回{"status": 400}
 '''
-def emo_share(request):
-	request_body=request.path
-	seg=request_body.strip().split("/")
-	info=seg[3].split("&")
-	emoid=info[0].split("=")[1]
-	share_type=info[1].split("=")[1]
+def emo_share(request,emoid,share_type):
 	try:
 		emo_object=Emotion.objects.get(emo_id=emoid)
 	except:
@@ -706,6 +710,7 @@ def emo_share(request):
 
 	data_dictionary={}
 	data_dictionary["emo_detail"]=emo_object.emo_img
+
 	emo_object.emo_popularity+=1
 	if share_type=="1":
 		emo_object.weixin_send_num+=1
@@ -713,7 +718,6 @@ def emo_share(request):
 		emo_object.weixin_share_num+=1
 	elif share_type=="3":
 		emo_object.weibo_share_num+=1
-		emo_object.save()
 	else:
 		emo_object.emo_like_num+=1
 	emo_object.save()
