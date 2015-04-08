@@ -93,7 +93,7 @@ def get_latest_emo_info(emo):
 		ret_data["status"] =  200
 		ret_data["emo_id"] =  emo.emo_id
 		ret_data["emo_author"]=get_username_by_id(emo.emo_id)
-		ret_data["emo_detail"] = emo.emo_content
+		ret_data["emo_detail"] = emo.emo_img
 		ret_data["is_deleted"] = emo.emo_bool_deleted
 		ret_data["emo_popularity"] = emo.emo_popularity
 		ret_data["emo_like"] = emo.emo_like_num
@@ -537,12 +537,12 @@ def addtag(request):
 
 #search api 
 '''  按作者搜索表情
-可能会返回已经被删除的表情
+会返回已经被删除的表情,通过is_deleted字段判断是否被删除
 /app/search/author=xxx&sortby=1&page=1&count=50
 //作者（base64编码），按照热度|时间排序（1为热度，2为时间），页码，每页返回的数目
 返回的结果
 {"status": 200,
-"author":1110310214",
+"author":"1110310214",
 "emos": [
 {"emo_type": 2, //表情类型
 "tags": [
@@ -559,14 +559,18 @@ def addtag(request):
 ......
 ],
 "total_num":300,
-"next_page":2
+"next_page":2 //下一页，如果为负值，则不存在下一页
 }
 '''
 def search_emos_by_author(request,username,sortby="1",page="1",page_count="5"):
 	#加入base64编码
-	username=b64decode(username)
-	page=int(page)
-	page_count=int(page_count)
+	try:
+		username=b64decode(username)
+		page=int(page)
+		page_count=int(page_count)
+	except:
+		return ret_status(400)
+
 	cur_user=get_user_by_username(username)
 	if cur_user==None:
 		return ret_status(400)
@@ -580,16 +584,19 @@ def search_emos_by_author(request,username,sortby="1",page="1",page_count="5"):
 		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("-emo_last_update")
 	count=0
 	if all_emos:
-		emos_num=all_emos.count()
+		try:
+			emos_num=all_emos.count()
+		except:
+			return ret_status(400)
 		ret_data = dict()
 		ret_data["status"] = 200
 		ret_data["total_num"]=emos_num
-		ret_data["next_page"]=int(page)+1
-		# author_info["email"]=
 		ret_data["author"]=username
 		ret_data["emos"]  = list()
-
-		paginator = Paginator(all_emos, page_count) # Show 25 sub_emos per page
+		try:
+			paginator = Paginator(all_emos, page_count) # Show 25 sub_emos per page
+		except:
+			return ret_status(400)
 		try:
 			sub_emos = paginator.page(page)
 		except PageNotAnInteger:
@@ -598,6 +605,13 @@ def search_emos_by_author(request,username,sortby="1",page="1",page_count="5"):
 		except EmptyPage:
 			# If page is out of range (e.g. 9999), deliver last page of results.
 			sub_emos = paginator.page(paginator.num_pages)
+
+		if page==paginator.num_pages:
+			ret_data["next_page"]=(-1)
+		elif page>=1 and page<paginator.num_pages:
+			ret_data["next_page"]=page+1
+		else:
+			ret_status(400)
 
 		for emo in sub_emos:
 			tmpdict = dict()
@@ -644,9 +658,12 @@ def search_emos_by_author(request,username,sortby="1",page="1",page_count="5"):
 '''
 def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="5"):
 	#加入base64编码
-	tag_name=b64decode(tag_name)
-	page=int(page)
-	page_count=int(page_count)
+	try:
+		tag_name=b64decode(tag_name)
+		page=int(page)
+		page_count=int(page_count)
+	except:
+		return ret_status(400)
 	cur_tag=get_tag_by_tagname(tag_name)
 	if cur_tag==None:
 		return ret_status(400)
@@ -661,11 +678,13 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="5"):
 
 
 	if all_emos:
-		emos_num=all_emos.count()
+		try:
+			emos_num=all_emos.count()
+		except:
+			return ret_status(400)
 		ret_data = dict()
 		ret_data["status"] = 200
 		ret_data["total_num"]=emos_num
-		ret_data["next_page"]=int(page)+1
 		ret_data["emos"]  = list()
 		ret_data["tag"]={}		
 		ret_data["tag"]["id"]=cur_tag.tag_id
@@ -673,8 +692,10 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="5"):
 		ret_data["tag"]["popularity"]=cur_tag.tag_popularity
 		ret_data["tag"]["is_deleted"]=cur_tag.tag_bool_deleted
 		ret_data["tag"]["last_update"]=cur_tag.tag_last_update
-
-		paginator = Paginator(all_emos, page_count) # Show 25 sub_emos per page
+		try:
+			paginator = Paginator(all_emos, page_count) # Show 25 sub_emos per page
+		except:
+			return ret_status(400)
 		try:
 			sub_emos = paginator.page(page)
 		except PageNotAnInteger:
@@ -683,6 +704,13 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="5"):
 		except EmptyPage:
 			# If page is out of range (e.g. 9999), deliver last page of results.
 			sub_emos = paginator.page(paginator.num_pages)
+
+		if page==paginator.num_pages:
+			ret_data["next_page"]=(-1)
+		elif page>=1 and page<paginator.num_pages:
+			ret_data["next_page"]=page+1
+		else:
+			ret_status(400)
 
 		for emo in sub_emos:
 			tmpdict = dict()
@@ -698,6 +726,8 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="5"):
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
+
+
 def get_emo_html(request,emoid):
 	try:
 		emo_object=Emotion.objects.get(emo_id=int(emoid))
@@ -706,8 +736,10 @@ def get_emo_html(request,emoid):
 
 	data_dictionary={}
 	data_dictionary["emo_detail"]=emo_object.emo_img
-
-	return render_to_response("get_emo_html.html",data_dictionary,context_instance=RequestContext(request))
+	try:
+		return render_to_response("get_emo_html.html",data_dictionary,context_instance=RequestContext(request))
+	except:
+		return ret_status(400)
 
 
 

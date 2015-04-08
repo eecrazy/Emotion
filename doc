@@ -1,0 +1,101 @@
+search api 
+1、按作者搜索表情
+注：会返回已经被删除的表情,通过is_deleted字段判断是否被删除
+/app/search/author=xxx&sortby=1&page=1&count=50
+参数分别为：
+作者，即用户的username，（经过base64编码）
+返回的表情按照热度|时间排序（1为热度，热度最高的排在最前面；2为时间，最新更新的排在最前面），
+页码
+每页返回的数目
+
+失败返回{"status": 400}
+成功则返回的数据格式如下：
+{"status": 200,
+"author":"1110310214",
+"emos": [
+{"emo_type": 2, //表情类型
+"tags": [
+{"id": 1804, "name": "\u9ad8\u5174","tag_popularity":2},//表情的标签信息
+{"id": 2221, "name": "happy","tag_popularity":3}
+],
+"emo_id": 2032, //表情ID
+"emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
+"is_deleted": false,//是否已删除
+"emo_popularity": 0,//热度
+"emo_like": 0,//收藏数
+"last_update":
+},
+......
+],
+"total_num":300,
+"next_page":2 //下一页，如果为-1，则不存在下一页
+}
+
+2、按标签搜索表情
+注：会返回已经被删除的表情,通过is_deleted字段判断是否被删除
+/app/search/tag=xxx&sortby=1&page=1&count=50
+参数分别为：
+标签名（base64编码）
+返回的表情按照热度|时间排序（1为热度，热度最高的排在最前面；2为时间，最新更新的排在最前面），
+页码
+每页返回的数目
+
+失败返回{"status": 400}
+成功则返回数据格式如下：
+{"status": 200,
+"tag":{"id": 2221, "name": "happy","popularity":2,"is_deleted":false,"last_update":1427770195168},//搜索的标签信息
+"emos": [
+{"emo_type": 2, //表情类型
+"emo_id": 2032, //表情ID
+"emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
+"emo_author": "nono_1984@163.com",//作者信息
+"is_deleted": false,//是否已删除
+"emo_popularity": 0,//热度
+"emo_like": 0,//收藏数
+"last_update":1427770195168 //最后更新时间戳
+},
+...
+],
+"total_num":300,//总数
+"next_page":2//下一页，如果为负值-1，则不存在下一页
+}
+
+3、将用户的分享信息传回服务器
+/app/share/save_share_info
+该请求为http POST请求，发送的数据格式如下：
+{
+	"emo_id":"1",
+	"share_type":"1",  
+}
+其中emo_id为表情id，share_type可取1，2，3，4
+1表示微信转发，2表示朋友圈分享，3表示微博分享，4表示用户收藏
+每一次请求成功，emo_populariy数值增加1，相应的分享信息字段也会增加1（即1，2，3，4所代表的类型）
+
+如果成功返回{"status": 200}，否则返回{"status": 400}
+
+
+4、为每一个表情返回一个html页面用于转发或分享
+/app/share/emoid=1
+url中参数只包含相应表情的id
+如果成功返回包含相应表情的html页面，否则返回{"status": 400}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
