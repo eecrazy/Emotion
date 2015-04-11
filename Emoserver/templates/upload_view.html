@@ -6,6 +6,7 @@
 
 {%block css_script %}
 <link href="{{ STATIC_URL }}css/jquery.tagsinput.css" rel="stylesheet">
+
 <style type="text/css">
     .imgbox {
         background-color: #ffffff;
@@ -19,8 +20,14 @@
         border-top: 1px solid #dadada;
         padding-top: 5px;
     }
+    .populraity_tag {
+        float: right;
+        font-size: 40px;
+
+    }
 
 </style>
+
 <script src="{{ STATIC_URL }}js/jquery.tagsinput.js"></script> 
 {% endblock %}
 
@@ -34,15 +41,18 @@
 
                 <div class="imgtags">
                 <input class="form-control tag_form" pk="{{emo.pk}}" value="{{ emo.emo_init_tag_list|joinby:'tag_name'}}">
-            </div>
+                </div>
 
+                <div class="popularity_tag" style="margin-top:12px;font-size:13px;float:left;">
+                <span>流行度:  {{ emo.emo_popularity}}</span>
+                </div>
 
-            <div class="pull-right" style="margin-top:5px;">
+                <div class="pull-right" style="margin-top:5px;">
                 <a href="/upload/delete/{{emo.pk}}" class="btn btn-danger btn-sm">
                 <i class="glyphicon glyphicon-trash"></i>
                 <span>删除</span>
                 </a>
-            </div>
+                </div>
 
             </div>
             {% endif %} 

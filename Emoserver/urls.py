@@ -35,8 +35,9 @@ urlpatterns = patterns('',
 	url(r'^addtag$',ajax.addtag),
 	url(r'^removetag$',ajax.removetag),
 
-	#hottag,hotemo
 
+
+	#hottag,hotemo
 	url(r'list/hottag$',views.HotTagListView.as_view(),name="list_hottag"),
 	url(r'list/hotemo$',views.HotEmoListView.as_view(),name="list_hotemo"),
 	url(r'list/sysinfo$',views.sysinfo),
