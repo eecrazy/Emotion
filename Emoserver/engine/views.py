@@ -16,7 +16,8 @@ from Emoserver.users.models import SiteUser
 from .response import JSONResponse, response_mimetype
 from .serialize import serialize
 from .forms import UploadForm,registerForm  
-from .ajax import lookuporinsert_tag
+from .ajax import lookuporinsert_tag,get_username_by_id
+from .ajax import *
 from Emoserver.utils.decorators import admin_needed
 import json
 import re 
@@ -232,7 +233,6 @@ class PictureListView(ListView):
     template_name = "upload_view.html"
     #paginate_by = 100
 
-
     @method_decorator(login_needed(login_url="/"))
     def dispatch(self, *args, **kwargs):
         return super(PictureListView, self).dispatch(*args, **kwargs)
@@ -242,16 +242,15 @@ class PictureListView(ListView):
     #     # add the request to the context
     #     context.update({'request':self.request})
     #     return context
-
-    def get_queryset(self):
-        return Emotion.objects.filter(emo_upload_user=self.request.siteuser,emo_bool_deleted=False)\
-        .exclude(emo_img__isnull=True)
     # def render_to_response(self, context, **response_kwargs):
     #     files = [ serialize(p) for p in self.get_queryset() if p.emo_img]
     #     data = {'files': files}
     #     response = JSONResponse(data, mimetype=response_mimetype(self.request))
     #     response['Content-Disposition'] = 'inline; filename=files.json'
     #     return response
+    def get_queryset(self):
+        return Emotion.objects.filter(emo_upload_user=self.request.siteuser,emo_bool_deleted=False)\
+                .exclude(emo_img__isnull=True).order_by("-emo_popularity")
 
 
 
@@ -295,4 +294,59 @@ class HotTagListView(ListView):
 
     def post(self, request, *args, **kwargs):
         pass
-         
+
+
+class AllEmoListView(ListView):
+    template_name = "manager_search.html"
+
+    @method_decorator(login_needed(login_url="/"))
+    def dispatch(self, *args, **kwargs):
+        return super(AllEmoListView, self).dispatch(*args, **kwargs)
+    # def get_context_data(self, **kwargs):
+    #     # Call the base implementation first to get a context
+    #     context = super(PictureListView, self).get_context_data(**kwargs)
+    #     # add the request to the context
+    #     context.update({'request':self.request})
+    #     return context
+
+    def get_queryset(self):
+        return Emotion.objects.filter(emo_bool_deleted=False)\
+        .exclude(emo_img__isnull=True)
+
+@admin_needed(login_url="/")
+def SearchByAuthor(request):
+    username=request.GET.get('author',None)
+    user_object=get_user_by_username(username)
+    flag=True
+    if user_object==None:
+        object_list=None
+    else:
+        uid=user_object.id
+        object_list=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False)\
+        .exclude(emo_img__isnull=True).order_by("-emo_popularity")
+    return render_to_response("manager_search.html",locals(),context_instance=RequestContext(request))
+
+
+@admin_needed(login_url="/")
+def SearchByTag(request):
+    tag_name=request.GET.get('tag',None)
+    cur_tag=get_tag_by_tagname(tag_name)
+    flag=False
+    if cur_tag==None:
+        object_list=None
+    else:
+        user_list=[]
+        tag_id=cur_tag.tag_id
+        object_list=cur_tag.emo_list.all().exclude(emo_bool_deleted=False,emo_img__isnull=True).\
+                order_by("-emo_popularity")
+        for emo in object_list:
+            user_list.append(get_user_by_id(emo.emo_id))
+    return render_to_response("manager_search.html",locals(),context_instance=RequestContext(request))
+
+
+
+
+
+
+
+

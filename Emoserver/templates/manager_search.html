@@ -2,12 +2,20 @@
 {% load upload_tags %}
 
 
-{%block title%} diplay {% endblock %}
+{%block title%} search by author or tag {% endblock %}
 
 {%block css_script %}
 <link href="{{ STATIC_URL }}css/jquery.tagsinput.css" rel="stylesheet">
 
 <style type="text/css">
+
+    .search_box {
+      clear: both;
+      margin-top: 20px;
+      margin-right: 20px;
+      margin-bottom: 20px;
+      width:100%; 
+    }
     .imgbox {
         background-color: #ffffff;
         padding: 10px;
@@ -33,16 +41,43 @@
 
 
 {% block display %}
+    <div class="col-md-3 column search_box">
+    
+
+    <div class = "search">
+       <form action="/search/author" method="GET" class = "search-form">
+           <input type="text" name="author">
+           <input type="submit" value="按作者搜索">
+       </form>
+   </div>    
+   <div class = "search">
+       <form action="/search/tag" method="get" class = "search-form">
+           <input type="text" name="tag">
+           <input type="submit" value="按标签搜索">
+       </form>
+   </div>    
+    </div>
+
     {% if object_list %}
         {% for emo in object_list %} 
             {% if emo.emo_img %}
             <div class="col-md-3 column imgbox">
-                <img width="200px" height="200px" src="{{emo.emo_img.url}}"  />
+                <img width="190px" height="200px" src="{{emo.emo_img.url}}" />
 
                 <div class="imgtags">
                 <input class="form-control tag_form" pk="{{emo.pk}}" value="{{ emo.emo_init_tag_list|joinby:'tag_name'}}">
                 </div>
-
+            {% if flag %}
+                <div class="popularity_tag" style="margin-top:12px;font-size:13px;">
+                <span>作者:  {{ user_object.username}}</span>
+                </div>
+            {% endif %} 
+            {% if not flag %}
+                <div class="popularity_tag" style="margin-top:12px;font-size:13px;">
+                <span>作者:  {{ user_list.username}}</span>
+                </div>
+              
+            {% endif %} 
                 <div class="popularity_tag" style="margin-top:12px;font-size:13px;float:left;">
                 <span>流行度:  {{ emo.emo_popularity}}</span>
                 </div>
@@ -117,8 +152,6 @@
                 }
 
         });
-
-
     });
 </script>
 

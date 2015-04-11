@@ -35,9 +35,12 @@
 		<div class="col-md-2">
 			<input disabled="True" type="text" class="form-control" value="{{ hottag.hottag_category}}">
 		</div>
+
 		<div class="col-md-8">
-			<input type="text"  class="form-control input-lg tagsinput" value="{{ hottag.hottag_list|joinby:'tag_name'}}">
+	<input type="text"  id="addone" class="form-control tag_form input-lg tagsinput" value="{{ hottag.hottag_list|joinby:'tag_name'}}">
+
 		</div>
+    
      <button type="button" class="delete btn btn-primary btn-lg" hottag_id="{{hottag.hottag_id}}">
      	Delete
      </button>
@@ -45,10 +48,9 @@
   </form>
   </div>
 </div>
-	
-
 	{% endfor %}
 {% endif %}
+
 <div id="Hottag_warning" class="alert alert-danger" style="display: none;"></div>
 <button id="add" type="button" class="btn btn-info btn-lg">
   <span class="glyphicon glyphicon-plus"></span> 
@@ -60,13 +62,15 @@
 
 {% block css_script %}
 <link href="{{ STATIC_URL }}css/jquery.tagsinput.css" rel="stylesheet">
+
 <script src="{{ STATIC_URL }}js/jquery.tagsinput.js"></script>
+
 <script type="text/javascript">
+
+
 $(document).ready(function() {
-
-
- $(".tagsinput").tagsInput();
-
+ $(".tagsinput").tagsInput()
+ 
   function deleteForm(btn) {
       // Delete the panel
       var hottag_id = $(btn).attr("hottag_id");

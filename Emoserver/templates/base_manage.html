@@ -7,7 +7,7 @@
             {% if request.siteuser.is_superuser %}
 
             <ul class="nav nav-pills nav-stacked" style="padding-top:10px;">
-                <li style="background-color: #00BDF3;"><a href="#"><i class="fa fa-home fa-fw"></i>Home</a>
+                <li style="background-color: #00BDF3;"><a href="#"><i class="fa fa-home fa-fw"></i>管理员功能区</a>
                 </li>
                 <li><a href="/list/hottag"><i class="fa fa-list-alt fa-fw"></i>热门标签管理</a>
                 </li>
@@ -15,8 +15,16 @@
                 </li> 
                 <li><a href="/list/sysinfo"><i class="fa fa-home fa-fw"></i>系统状态</a>
                 </li>
+                <li><a href="/search/view"><i class="fa fa-home fa-fw"></i>搜索作者或标签</a>
+                </li>
+            <ul class="nav nav-pills nav-stacked" style="padding-top:10px;">
+                <li style="background-color: #00BDF3;"><a href="#"><i class="fa fa-home fa-fw"></i>Home</a>
+                </li>
+                <li><a href="/upload/new"><i class="fa fa-list-alt fa-fw"></i>上传表情</a>
+                </li>
+                <li><a href="/upload/view"><i class="fa fa-file-o fa-fw"></i>管理表情</a>
+                </li>
             </ul>
-
             {% else %}
             <ul class="nav nav-pills nav-stacked" style="padding-top:10px;">
                 <li style="background-color: #00BDF3;"><a href="#"><i class="fa fa-home fa-fw"></i>资料管理</a>
