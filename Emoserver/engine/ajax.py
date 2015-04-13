@@ -231,6 +231,12 @@ def get_hotemos(request):
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
+def get_pk_tag(req):
+	pk = req.get("pk",None)
+	tag = req.get("tag",None)
+	tag = tag.lstrip("#")
+	return pk,tag
+
 
 
 @admin_needed(login_url="/")
@@ -295,6 +301,27 @@ def CreateHottag(request):
 		return HttpResponse(json.dumps({"ok":False,"msg":"请求方法错误"}))
 
 @admin_needed(login_url="/")
+def AddHottag(request):
+	if request.siteuser.is_superuser:
+		if request.GET:
+			pk,tag = get_pk_tag(request.GET)
+			if pk and tag:
+				hottag_object = None
+				try:
+					hottag_object = HotTags.objects.get(hottag_id=int(pk))	
+				except HotTags.DoesNotExist:
+					return ret_status(400)
+				#can only add to his own emotion	
+				tag_object = lookup_tag(tag)
+				if tag_object:
+					hottag_object.hottag_list.add(tag_object)
+					hottag_object.save()
+					return ret_status(200)
+				else:
+					return ret_status(400)
+	return ret_status(400)
+
+@admin_needed(login_url="/")
 def DeleteHotemo(request):
 	hotemo_id = request.GET.get("id",None) 
 	if hotemo_id:
@@ -317,6 +344,28 @@ def DeleteHottag(request):
 			return HttpResponse(json.dumps({"ok":False,"msg":"删除失败"}))
 	else:
 		return HttpResponse(json.dumps({"ok":False,"msg":"该热门标签组不存在"}))
+
+@admin_needed(login_url="/")
+def RemoveHottag(request):
+	#not allowed login in user
+	if request.siteuser.is_superuser:
+		if request.GET:
+			pk,tag = get_pk_tag(request.GET)
+			if pk and tag:
+				hottag_object = None
+				try:
+					hottag_object = HotTags.objects.get(hottag_id=int(pk))	
+				except HotTags.DoesNotExist:
+					return ret_status(400)
+				#can only add to his own emotion	
+				tag_object = lookup_tag(tag)
+				if tag_object:
+					hottag_object.hottag_list.remove(tag_object)
+					hottag_object.save()
+					return ret_status(200)
+				else:
+					return ret_status(600)
+	return ret_status(700)
 
 '''
 #/app/updatetemap?_t=20140201222
@@ -473,12 +522,6 @@ def updatetemap(request,cursor):
 	return ret_status(400)
 
 
-def get_pk_tag(req):
-	pk = req.get("pk",None)
-	tag = req.get("tag",None)
-	tag = tag.lstrip("#")
-	return pk,tag
-
 
 '''
 
@@ -497,7 +540,7 @@ def removetag(request):
 			except Emotion.DoesNotExist:
 				return ret_status(400)
 			#can only delete his own emotion tag	
-			if emo_object.emo_upload_user == request.siteuser:
+			if emo_object.emo_upload_user == request.siteuser or request.siteuser.is_superuser:
 				tag_object = lookup_tag(tag)
 				if tag_object:
 					emo_object.emo_init_tag_list.remove(tag_object)
@@ -522,7 +565,7 @@ def addtag(request):
 				except Emotion.DoesNotExist:
 					return ret_status(400)
 				#can only add to his own emotion	
-				if emo_object.emo_upload_user == request.siteuser:
+				if emo_object.emo_upload_user == request.siteuser or request.siteuser.is_superuser:
 					tag_object = lookuporinsert_tag(tag)
 					if tag_object:
 						emo_object.emo_tag_list.add(tag_object)
@@ -533,6 +576,8 @@ def addtag(request):
 						tag_object.save()
 						return ret_status(200)
 	return ret_status(400)
+
+
 
 
 #search api 
@@ -562,7 +607,7 @@ def addtag(request):
 "next_page":2 //下一页，如果为负值，则不存在下一页
 }
 '''
-def search_emos_by_author(request,username,sortby="1",page="1",page_count="5"):
+def search_emos_by_author(request,username,sortby="1",page="1",page_count="12"):
 	#加入base64编码
 	try:
 		username=b64decode(username)
@@ -656,7 +701,7 @@ def search_emos_by_author(request,username,sortby="1",page="1",page_count="5"):
 "next_page":2//下一页，如果为负值，则不存在下一页
 }
 '''
-def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="5"):
+def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="12"):
 	#加入base64编码
 	try:
 		tag_name=b64decode(tag_name)

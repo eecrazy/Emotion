@@ -37,8 +37,7 @@
 		</div>
 
 		<div class="col-md-8">
-	<input type="text"  id="addone" class="form-control tag_form input-lg tagsinput" value="{{ hottag.hottag_list|joinby:'tag_name'}}">
-
+	<input type="text"  class="form-control  input-lg tagsinput" pk="{{hottag.hottag_id}}" value="{{ hottag.hottag_list|joinby:'tag_name'}}">
 		</div>
     
      <button type="button" class="delete btn btn-primary btn-lg" hottag_id="{{hottag.hottag_id}}">
@@ -68,9 +67,52 @@
 <script type="text/javascript">
 
 
-$(document).ready(function() {
- $(".tagsinput").tagsInput()
+$(document).ready(
+
+  function() {
  
+        var regx = /^[a-zA-Z|\d|\u0391-\uFFE5]{0,10}$/
+        $(".tagsinput").tagsInput({
+
+            "onAddTag": function(tag) {
+
+              console.log("add")
+                if (!regx.test(tag)){
+                    alert("标签只能为字母数字汉字,不超过十个字");
+                    return;
+                }
+                focused_input = $("input:focus").attr("id").slice(0, -4);
+                pk = $("#" + focused_input).attr("pk");
+              console.log(pk)
+              console.log(tag)
+
+
+                $.getJSON("/addhottag", {
+                    "pk": pk,
+                    "tag": tag
+                }, function(data) {
+                    console.log(data)
+                });
+            },
+            "onRemoveTag": function(tag) {
+              console.log("remove")
+
+                $(".tagsinput").hover(function(e){
+                    hover_input = e.currentTarget.id.slice(0,-10)
+                    pk = $("#" + hover_input).attr("pk");
+                    console.log(pk)
+                    console.log(tag)
+                    $.getJSON("/removehottag", {
+                        "pk": pk,
+                        "tag": tag
+                    }, function(data) {
+                        console.log(data)
+                    });
+                    $(".tagsinput").unbind('mouseenter mouseleave');
+                });
+                }
+        });
+
   function deleteForm(btn) {
       // Delete the panel
       var hottag_id = $(btn).attr("hottag_id");

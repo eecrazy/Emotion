@@ -43,12 +43,14 @@ urlpatterns = patterns('',
 	url(r'list/sysinfo$',views.sysinfo),
 	url(r'create/hotemo$',ajax.CreateHotemo),
 	url(r'create/hottag$',ajax.CreateHottag),
+	url(r'addhottag$',ajax.AddHottag),
 	url(r'delete/hotemo$',ajax.DeleteHotemo),
 	url(r'delete/hottag$',ajax.DeleteHottag),
+	url(r'removehottag$',ajax.RemoveHottag),
 
 	#admin search
-	url(r'^search/view/$', views.AllEmoListView.as_view(), name='search_view'),
-	url(r'^search/author.*$', views.SearchByAuthor, name='search_by_author_view'),
+	url(r'^search/view/$', views.AllEmoListView, name='search_view'),
+	url(r'^search/author$', views.SearchByAuthor, name='search_by_author_view'),
 	url(r'^search/tag.*$', views.SearchByTag, name='search_by_tag_view'),
 
 

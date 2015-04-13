@@ -20,7 +20,11 @@ from .ajax import lookuporinsert_tag,get_username_by_id
 from .ajax import *
 from Emoserver.utils.decorators import admin_needed
 import json
+from base64 import *
 import re 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 EMO_TEXT = 1 
 EMO_MOTION = 2
@@ -295,57 +299,96 @@ class HotTagListView(ListView):
     def post(self, request, *args, **kwargs):
         pass
 
+@admin_needed(login_url="/")
+def AllEmoListView(request,page=1,page_count=20):
+    page=request.GET.get('page',None)
+    if page==None:
+        page=1
+    object_list=Emotion.objects.all().exclude(emo_bool_deleted=True,emo_img__isnull=True).order_by("-emo_popularity")
 
-class AllEmoListView(ListView):
-    template_name = "manager_search.html"
-
-    @method_decorator(login_needed(login_url="/"))
-    def dispatch(self, *args, **kwargs):
-        return super(AllEmoListView, self).dispatch(*args, **kwargs)
-    # def get_context_data(self, **kwargs):
-    #     # Call the base implementation first to get a context
-    #     context = super(PictureListView, self).get_context_data(**kwargs)
-    #     # add the request to the context
-    #     context.update({'request':self.request})
-    #     return context
-
-    def get_queryset(self):
-        return Emotion.objects.filter(emo_bool_deleted=False)\
-        .exclude(emo_img__isnull=True)
+    try:
+        paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
+    except:
+        return ret_status(400)
+    flag=3
+    try:
+        sub_emos = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        sub_emos = paginator.page(page)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        sub_emos = paginator.page(paginator.num_pages)
+    user_list=[]
+    for emo in sub_emos:
+        user_list.append(get_user_by_id(emo.emo_id))
+    return render_to_response("manager_search.html",locals(),context_instance=RequestContext(request))
 
 @admin_needed(login_url="/")
-def SearchByAuthor(request):
+def SearchByAuthor(request,page=1,page_count=20):
     username=request.GET.get('author',None)
+    
+    page=request.GET.get('page',None)
+    if page==None:
+        page=1
+    object_list=search_emos_by_author(request,b64encode(username))
     user_object=get_user_by_username(username)
-    flag=True
+    flag=1
+    
     if user_object==None:
         object_list=None
     else:
         uid=user_object.id
         object_list=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False)\
         .exclude(emo_img__isnull=True).order_by("-emo_popularity")
+        try:
+            paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
+        except:
+            return ret_status(400)
+        try:
+            sub_emos = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            sub_emos = paginator.page(page)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            sub_emos = paginator.page(paginator.num_pages)
+
     return render_to_response("manager_search.html",locals(),context_instance=RequestContext(request))
 
-
 @admin_needed(login_url="/")
-def SearchByTag(request):
+def SearchByTag(request,page=1,page_count=20):
     tag_name=request.GET.get('tag',None)
+    page=request.GET.get('page',None)
+    if page==None:
+        page=1
     cur_tag=get_tag_by_tagname(tag_name)
-    flag=False
+
+    flag=2
+    index=1
     if cur_tag==None:
         object_list=None
     else:
         user_list=[]
         tag_id=cur_tag.tag_id
-        object_list=cur_tag.emo_list.all().exclude(emo_bool_deleted=False,emo_img__isnull=True).\
+        object_list=cur_tag.emo_list.all().exclude(emo_bool_deleted=True,emo_img__isnull=True).\
                 order_by("-emo_popularity")
-        for emo in object_list:
+
+        try:
+            paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
+        except:
+            return ret_status(400)
+        try:
+            sub_emos = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            sub_emos = paginator.page(page)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            sub_emos = paginator.page(paginator.num_pages)
+        for emo in sub_emos:
             user_list.append(get_user_by_id(emo.emo_id))
     return render_to_response("manager_search.html",locals(),context_instance=RequestContext(request))
-
-
-
-
 
 
 
