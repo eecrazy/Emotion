@@ -23,7 +23,9 @@ def upload_js():
             <span class="preview"></span>
         </td>
         <td>
-            <input type="text" name="tags" class="form-control input-lg upload_input" placeholder="请输入表情的标签,以空格分开,如'ha he'"/>            
+            <input type="text" name="tags" class="form-control input-lg upload_input" placeholder="请输入表情的标签,以空格分开,如'ha he'"/>
+            
+            <input type="text" name="username" class="form-control input-lg upload_input" placeholder="username"/>
             {% if (file.error) { %}
                 <div><span class="label label-important">{%=locale.fileupload.error%}</span> {%=file.error%}</div>
             {% } %}

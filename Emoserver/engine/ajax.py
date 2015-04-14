@@ -3,7 +3,7 @@ from django.template import Template,Context
 from django.shortcuts import render_to_response,RequestContext
 from django.http import HttpResponse
 from Emoserver.users.models import SiteUser
-from models import Emotion,Tag,HotTags,HotEmos
+from models import Emotion,Tag,HotTags,HotEmos,ValidationCode
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from Emoserver.utils.decorators import admin_needed
@@ -12,6 +12,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import operator
 import json
 from base64 import *
+from datetime import *
 EMO_TEXT = 1 
 EMO_MOTION = 2
 
@@ -27,6 +28,9 @@ def lookup_tag(tag_name):
 	if tag_name:
 		try:
 			tag_object = Tag.objects.get(tag_name=tag_name)
+			if tag_object.tag_bool_deleted==True:
+				tag_object.tag_bool_deleted=False
+				tag_object.save()
 		except Tag.DoesNotExist:
 			tag_object = None
 	return tag_object
@@ -36,6 +40,7 @@ def lookuporinsert_tag(tag_name):
 	if not tag_object:
 		tag_object = Tag()
 		tag_object.tag_name = tag_name
+		tag_object.tag_bool_deleted=False
 		tag_object.save()
 	return tag_object
 
@@ -834,4 +839,33 @@ def save_share_info(request):
 		except:
 			return ret_status(400)
 	return ret_status(400)
+
+def get_and_save_vali_code(request):
+	vali_code_object=ValidationCode()
+	cur_datetime=datetime.now()
+	vali_code_object.vali_code=str(cur_datetime.microsecond)
+	vali_code_object.expire_time=cur_datetime+timedelta(2)
+	vali_code_object.save()	
+	ret_data={}
+	ret_data["status"] =  200
+	ret_data["vali_code"]=vali_code_object.vali_code
+	return HttpResponse(json.dumps(ret_data))
+
+
+#验证用户发来的验证码是否在数据库中，如果在的话是否过期
+def verify_vali_code(request):
+	vali_code=request.GET.get("vali_code",None)
+	if not vali_code:
+		return ret_status(400)
+	try:
+		vali_code_object=ValidationCode.objects.get(vali_code=vali_code)
+	except:
+		return ret_status(400)
+	try:
+		expire_time=vali_code_object.expire_time
+	except:
+		return ret_status(400)
+	if expire_time<datetime.now():
+		return ret_status(400)
+	return ret_status(200)
 

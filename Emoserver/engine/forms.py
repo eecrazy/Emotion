@@ -27,10 +27,17 @@ from django.contrib.auth.models import User
 
 class UploadForm(forms.ModelForm):
 	tags = forms.CharField(max_length=500,min_length=1,required=True)
+	# username = forms.CharField(max_length=56,required=True)
 	class Meta:
 		model = Emotion
 		fields = ["emo_img"]
 
+class OthersUploadForm(forms.ModelForm):
+	tags = forms.CharField(max_length=500,min_length=1,required=True)
+	username = forms.CharField(max_length=56,required=True)
+	class Meta:
+		model = Emotion
+		fields = ["emo_img"]
 
 class registerForm(forms.ModelForm):
 	email = forms.EmailField(required=True)	

@@ -11,24 +11,25 @@
 		<td>注册用户数</td>
 		<td>{{ user_num }}</td>
 	    </tr>
-            <tr class="info">
-            <td>表情数</td>
-            <td>{{ pic_num }}</td>
-            </tr>
-	
-            <tr class="danger">
-            <td>标签总数</td>
-            <td>{{ tag_num }}</td>
-            </tr>
-        </tbody>
+
+        <tr class="info">
+        <td>表情数</td>
+        <td>{{ pic_num }}</td>
+        </tr>
+
+        <tr class="danger">
+        <td>标签总数</td>
+        <td>{{ tag_num }}</td>
+        </tr>
+    </tbody>
     </table>
 
      <table class="table">
         <tbody>
-            {% for user_num in upload_by_users %}
-            <tr class="success">
-            <td>{{user_num.emo_upload_user}}</td>
-            <td>{{user_num.dcount}}</td>
+            {% for emo in user_info %}
+            <tr class="info">
+            <td>{{forloop.counter}}. {{emo.username}}</td>
+            <td>{{emo.num}}</td>
             {% endfor %}
         </tbody>
     </table>

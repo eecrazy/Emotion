@@ -15,8 +15,7 @@ from .models import Emotion,Tag,HotTags,HotEmos
 from Emoserver.users.models import SiteUser
 from .response import JSONResponse, response_mimetype
 from .serialize import serialize
-from .forms import UploadForm,registerForm  
-from .ajax import lookuporinsert_tag,get_username_by_id
+from .forms import UploadForm,registerForm,OthersUploadForm  
 from .ajax import *
 from Emoserver.utils.decorators import admin_needed
 import json
@@ -38,42 +37,35 @@ def index(request):
     return render_to_response("base_login.html",context)
 
 def test(request):
-    context = RequestContext(request)
-    # cate_list = ["pandas","test","emoj"]
-    # for key,cate in enumerate(cate_list):
-        
-    #     hottags = HotTags()
-    #     hottags.hottag_category = cate
-    #     hottags.save()
-    #     for tag in Tag.objects.all()[5*key:5+5*key]:
-    # 	    hottags.hottag_list.add(tag)
-    #     hottags.save()
-    
-    cate_list = ["pandas","test","emoj"]
-    for key,cate in enumerate(cate_list):
-        hotemos = HotEmos()
-        hotemos.hotemo_category = cate
-        
-        hotemos.save()
-        for emo in Emotion.objects.all()[5*key:5+5*key]:
-            hotemos.hotemo_list.add(emo)
-        hotemos.save()
-    
-    return render_to_response("test.html",context)
+    ret_data={}
+    username=request.GET.get("author",None)
+    if username==None:
+        return ret_status(400)
+    else:
+        user_object=get_user_by_username(username)
+        ret_data["status"]=200
+        ret_data["user"]=user_object.username
+        ret_data["requestuser"]=request.siteuser.username
+        ret_data["flag"]=request.siteuser==user_object
+        return HttpResponse(json.dumps(ret_data))
 
 @admin_needed(login_url="/")
 def sysinfo(request):
-	
-    pic_num = Emotion.objects.count()
-    user_num = SiteUser.objects.count()
-    tag_num = Tag.objects.count()
-    upload_by_users = Emotion.objects.values('emo_upload_user').annotate\
-    (dcount=Count('emo_upload_user'))
-
-
-    return render_to_response("sys_info.html",locals(),\
-context_instance=RequestContext(request))
-
+    ret_data={}
+    ret_data["pic_num"] = Emotion.objects.exclude(emo_bool_deleted=True).count()
+    ret_data["user_num"] = SiteUser.objects.exclude(is_active=False).count()
+    #除去已经删除的标签
+    ret_data["tag_num"] = Tag.objects.filter(tag_bool_deleted=False).count()
+    # tag_num = Tag.objects.count()
+    ret_data["user_info"]=[]
+    user_list=SiteUser.objects.all()
+    for user in user_list:
+        tmp={}
+        tmp["num"]=Emotion.objects.filter(emo_upload_user=user.id,emo_bool_deleted=False).count()
+        tmp["username"]=user.username
+        ret_data["user_info"].append(tmp)
+    return render_to_response("sys_info.html",ret_data,RequestContext(request))
+    # return HttpResponse(json.dumps(ret_data))
 # def register(request):
 #     return render_to_response("register.html")
 
@@ -196,6 +188,53 @@ class PictureCreateView(CreateView):
         data = json.dumps(form.errors)
         return HttpResponse(content=data, status=400, content_type='application/json')
 
+
+class CreateemoForOthers(CreateView):
+    model = Emotion
+    form_class = OthersUploadForm
+    template_name = "upload_new_for_others.html"
+    tag_pattern = re.compile("^[a-zA-Z\d\u0391-\uFFE5]{1,10}$")
+    @method_decorator(admin_needed(login_url="/"))
+    def dispatch(self, *args, **kwargs):
+        return super(CreateemoForOthers, self).dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        username=form.cleaned_data.get("username",None)
+
+        user_object=get_user_by_username(username)
+
+        self.object = form.save(commit=False)
+        self.object.emo_type = EMO_MOTION
+        self.object.emo_upload_user = user_object
+        self.object.emo_bool_deleted = False
+        self.object.save()
+
+        for tag in form.cleaned_data.get("tags","").split():
+            # tag = tag.decode("utf-8")
+            # if not self.tag_pattern.match(tag):
+            #     continue
+            tag_object = lookuporinsert_tag(tag)
+            if tag_object:
+                #add to inititial taglist and tag_list
+                #emo object
+                self.object.emo_init_tag_list.add(tag_object)
+                self.object.emo_tag_list.add(tag_object)
+                #save the emotion to tag as well
+                tag_object.emo_init_list.add(self.object)
+                tag_object.save()
+
+        self.object.save()
+
+        files = [serialize(self.object)]
+        data = {'files': files}
+        response = JSONResponse(data, mimetype=response_mimetype(self.request))
+        response['Content-Disposition'] = 'inline; filename=files.json'
+        return response
+    def form_invalid(self, form):
+        data = json.dumps(form.errors)
+        return HttpResponse(content=data, status=400, content_type='application/json')
+
+
 class PictureDeleteView(DeleteView):
     model = Emotion
     #success_url = reverse("upload_view")
@@ -216,17 +255,21 @@ class PictureDeleteView(DeleteView):
 
         #delete the tag emotion map
         for tag_object in self.object.emo_init_tag_list.all():
-            tag_object.emo_init_list.remove(tag_object)
+            tag_object.emo_init_list.remove(self.object)
+            if not tag_object.emo_init_list.count():
+                tag_object.tag_bool_deleted = True
             tag_object.save()
 
         for tag_object in self.object.emo_tag_list.all():
-            tag_object.emo_list.remove(tag_object)
+            tag_object.emo_list.remove(self.object)
+            if not tag_object.emo_list.count():
+                tag_object.tag_bool_deleted = True
             tag_object.save()
 
         self.object.save()
         # response = JSONResponse(True, mimetype=response_mimetype(request))
         # response['Content-Disposition'] = 'inline; filename=files.json'
-        return HttpResponseRedirect("/upload/view")
+        return HttpResponseRedirect("/search/view")
 
 
 
@@ -304,8 +347,7 @@ def AllEmoListView(request,page=1,page_count=20):
     page=request.GET.get('page',None)
     if page==None:
         page=1
-    object_list=Emotion.objects.all().exclude(emo_bool_deleted=True,emo_img__isnull=True).order_by("-emo_popularity")
-
+    object_list=Emotion.objects.filter(emo_bool_deleted=False,emo_img__isnull=False).order_by("-emo_popularity")
     try:
         paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
     except:
@@ -319,9 +361,6 @@ def AllEmoListView(request,page=1,page_count=20):
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
         sub_emos = paginator.page(paginator.num_pages)
-    user_list=[]
-    for emo in sub_emos:
-        user_list.append(get_user_by_id(emo.emo_id))
     return render_to_response("manager_search.html",locals(),context_instance=RequestContext(request))
 
 @admin_needed(login_url="/")
@@ -331,7 +370,6 @@ def SearchByAuthor(request,page=1,page_count=20):
     page=request.GET.get('page',None)
     if page==None:
         page=1
-    object_list=search_emos_by_author(request,b64encode(username))
     user_object=get_user_by_username(username)
     flag=1
     
@@ -339,8 +377,8 @@ def SearchByAuthor(request,page=1,page_count=20):
         object_list=None
     else:
         uid=user_object.id
-        object_list=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False)\
-        .exclude(emo_img__isnull=True).order_by("-emo_popularity")
+        object_list=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False,\
+            emo_img__isnull=False).order_by("-emo_popularity")
         try:
             paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
         except:
@@ -365,13 +403,10 @@ def SearchByTag(request,page=1,page_count=20):
     cur_tag=get_tag_by_tagname(tag_name)
 
     flag=2
-    index=1
     if cur_tag==None:
         object_list=None
     else:
-        user_list=[]
-        tag_id=cur_tag.tag_id
-        object_list=cur_tag.emo_list.all().exclude(emo_bool_deleted=True,emo_img__isnull=True).\
+        object_list=cur_tag.emo_list.filter(emo_bool_deleted=False,emo_img__isnull=False).\
                 order_by("-emo_popularity")
 
         try:
@@ -386,10 +421,32 @@ def SearchByTag(request,page=1,page_count=20):
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
             sub_emos = paginator.page(paginator.num_pages)
-        for emo in sub_emos:
-            user_list.append(get_user_by_id(emo.emo_id))
     return render_to_response("manager_search.html",locals(),context_instance=RequestContext(request))
 
 
+
+@admin_needed(login_url="/")
+def AddemoForOthers(request,page=1,page_count=20):
+
+    user_list=SiteUser.objects.all()
+
+    page=request.GET.get('page',None)
+    if page==None:
+        page=1
+    object_list=Emotion.objects.all().exclude(emo_bool_deleted=True,emo_img__isnull=True).order_by("-emo_popularity")
+    try:
+        paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
+    except:
+        return ret_status(400)
+    flag=3
+    try:
+        sub_emos = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        sub_emos = paginator.page(page)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        sub_emos = paginator.page(paginator.num_pages)
+    return render_to_response("list_other_users.html",locals(),context_instance=RequestContext(request))
 
 

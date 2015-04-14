@@ -10,11 +10,21 @@
 <style type="text/css">
 
     .search_box {
-      clear: both;
       margin-top: 20px;
-      margin-right: 20px;
-      margin-bottom: 20px;
-      width:100%; 
+      width: 100%;
+    }
+    .search_input{
+        width: 20%;
+        margin-bottom: 5px;
+        margin-right: 10px;
+        float: left;
+    }
+    .search_btn{
+        margin-top: 5px;
+        width: 40px;
+    }
+    .search_btn{
+
     }
     .imgbox {
         background-color: #ffffff;
@@ -50,15 +60,15 @@
     
     <div class = "search">
        <form action="/search/author" method="GET" >
-           <input type="text" name="author" placeholder="username">
-           <button type="submit" class="btn btn-primary">按作者搜索</button>
+           <input type="text" name="author" class="form-control  search_input" placeholder="username">
+           <button type="submit" class="btn btn-primary search_bnt">按作者搜索</button>
        </form>
    </div>    
 
    <div class = "search">
        <form action="/search/tag" method="get" class = "search-form">
-           <input type="text" name="tag" placeholder="tag">
-           <button type="submit" class="btn btn-primary">按标签搜索</button>
+           <input type="text" name="tag" class="form-control search_input" placeholder="tag">
+           <button type="submit" class="btn btn-primary search_bnt">按标签搜索</button>
        </form>
    </div>    
     </div>
@@ -97,6 +107,7 @@
                 <i class="glyphicon glyphicon-trash"></i>
                 <span>删除</span>
                 </a>
+                
                 </div>
             </div>
             {% endif %} 

@@ -52,10 +52,10 @@ urlpatterns = patterns('',
 	url(r'^search/view/$', views.AllEmoListView, name='search_view'),
 	url(r'^search/author$', views.SearchByAuthor, name='search_by_author_view'),
 	url(r'^search/tag.*$', views.SearchByTag, name='search_by_tag_view'),
-
-
+	#get and verify validation code
+	url(r'^get/valicode$', views.get_and_save_vali_code, name="get_and_save_vali_code"),
+	url(r'^verify/valicode$', views.verify_vali_code, name="verify_vali_code"),
  
-	
 	#update map
 	#^searchbykeyword/(?P<kword>[\w\-]+)
 	url(r'^app/updatetemap/cursor=(?P<cursor>[0-9]{13})$',ajax.updatetemap),
@@ -67,6 +67,11 @@ urlpatterns = patterns('',
 	url(r'^upload/delete/(?P<pk>\d+)$', views.PictureDeleteView.as_view(), name='upload-delete'),
 	url(r'^upload/view/$', views.PictureListView.as_view(), name='upload-view'),
 	url(r'^userwork/view/(\d+)$', views.UserWorkListView.as_view(), name='userwork-view'),
+
+	#admin add emo for other users
+	url(r'^addemo/add/$', views.CreateemoForOthers.as_view(), name='upload-new'),
+	# url(r'^addemo/add/$', views.test, name='upload-new'),
+	url(r'^addemo/view$', views.AddemoForOthers, name='addemo_for_others'),
 
 )
 

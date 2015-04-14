@@ -142,3 +142,9 @@ class HotEmos(models.Model):
 	hotemo_id = models.AutoField(primary_key=True)
 	hotemo_category = models.CharField(max_length=64)
 	hotemo_list = models.ManyToManyField(Emotion,related_name="hemo")
+
+class ValidationCode(models.Model):
+	vali_code_id = models.AutoField(primary_key=True)
+	vali_code = models.CharField(max_length=64)
+	# A date and time, represented in Python by a datetime.datetime instance
+	expire_time = models.DateTimeField(auto_now=False)
