@@ -192,10 +192,11 @@ class PictureCreateView(CreateView):
 class CreateemoForOthers(CreateView):
     model = Emotion
     form_class = UploadForm
-    template_name = "upload_new.html"
+    template_name = "upload_new_for_others.html"
     tag_pattern = re.compile("^[a-zA-Z\d\u0391-\uFFE5]{1,10}$")
     @method_decorator(admin_needed(login_url="/"))
     def dispatch(self, *args, **kwargs):
+        username = self.kwargs.get("author",None)
         return super(CreateemoForOthers, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):

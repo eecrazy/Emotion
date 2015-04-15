@@ -64,6 +64,14 @@
             </div>
         </div>
         <!-- The table listing the files available for upload/download -->
+            <div class="panel panel-default">
+        <div class="panel-heading">
+        <h3 class="panel-title">为用户
+        {{request.path |cut:"/addemo/add/author="|cut:"/upload/new/"}}
+        添加表情</h3>
+        </div>
+        </div>
+
         <table role="presentation" class="table table-striped">
             <tbody class="files">
             <th>表情</th>
