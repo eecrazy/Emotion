@@ -8,31 +8,6 @@
 <link href="{{ STATIC_URL }}css/jquery.tagsinput.css" rel="stylesheet">
 
 <style type="text/css">
-
-    .search_box {
-      clear: both;
-      margin-top: 20px;
-      margin-right: 20px;
-      margin-bottom: 20px;
-      width:100%; 
-    }
-    .imgbox {
-        background-color: #ffffff;
-        padding: 10px;
-        margin-bottom: 10px;
-        -webkit-box-shadow: 0 8px 6px -6px #999;
-        -moz-box-shadow: 0 8px 6px -6px #999;
-        box-shadow: 0 8px 6px -6px #999;
-    }
-    .imgtags {
-        border-top: 1px solid #dadada;
-        padding-top: 5px;
-    }
-    .populraity_tag {
-        float: right;
-        font-size: 40px;
-
-    }
     .pagination {
         clear: both;
         width: 100%;
@@ -41,7 +16,10 @@
         color: #282828;
         font-size: 20px;
         margin-top: 10px;
-        margin-left: 30px;
+        width: 30%;
+        margin-right: 40px;
+        padding: 5px,10px,5px,10px;
+        float: left;
     }
 
 </style>
@@ -53,78 +31,33 @@
 {% block display %}
 
     {% if user_list %}
-        {% for user in user_list %} 
+        {% for user in sub_users %} 
             {% if user %}
             <div class="list">
             {{forloop.counter}}: 
-            <a href="/addemo/add/?author={{user.username}}">{{user.username}}</a><br>
+            <a href="/addemo/add/author={{user.username}}">{{user.username}}</a><br>
             </div>
             {% endif %} 
         {% endfor%} 
 
-<!-- 
-        <div class="pagination">
-            <span class="step-links">
-                {% if sub_emos.has_previous %}
-                    {% ifequal flag 1%}
-                    <a href="?author={{user_object.username}}&page={{ sub_emos.previous_page_number }}">previous</a>
-                    {% endifequal %}
-                    
-                {% endif %}
 
-                <span class="current">
-                    Page {{ sub_emos.number }} of {{ sub_emos.paginator.num_pages }}.
-                </span>
-                {% if sub_emos.has_next %}
-                    {% ifequal flag 1%}
-                    <a href="?author={{user_object.username}}&page={{ sub_emos.next_page_number }}">next</a>
-                    {% endifequal %}
-                {% endif %}
-            </span>
-        </div>
- -->
+ <nav>
+  <ul class="pagination left_side">
+    <li>
+
+    {% if sub_users.has_previous %}
+        <a href="?page={{ sub_users.previous_page_number }}">previous</a>
     {% endif %}
 
-<script type="text/javascript">
-
-    $(function() {
-        var regx = /^[a-zA-Z|\d|\u0391-\uFFE5]{0,10}$/
-        $(".tag_form").tagsInput({
-
-            "onAddTag": function(tag) {
-                if (!regx.test(tag)){
-                    alert("标签只能为字母数字汉字,不超过十个字");
-                    return;
-                }
-                focused_input = $("input:focus").attr("id").slice(0, -4);
-                pk = $("#" + focused_input).attr("pk");
-
-                $.getJSON("/addtag", {
-                    "pk": pk,
-                    "tag": tag
-                }, function(data) {
-                    console.log(data)
-                });
-            },
-            "onRemoveTag": function(tag) {
-                    console.log("remove")
-                $(".tagsinput").hover(function(e){
-                    hover_input = e.currentTarget.id.slice(0,-10)
-                    pk = $("#" + hover_input).attr("pk");
-                    console.log(pk)
-                    console.log(tag)
-                    $.getJSON("/removetag", {
-                        "pk": pk,
-                        "tag": tag
-                    }, function(data) {
-                        console.log(data)
-                    });
-                    $(".tagsinput").unbind('mouseenter mouseleave');
-                });
-            }
-
-        });
-    });
-</script>
-
+    <span class="current">
+        Page {{ sub_users.number }} of {{ sub_users.paginator.num_pages }}.
+    </span>
+    {% if sub_users.has_next %}
+        <a href="?page={{ sub_users.next_page_number }}">next</a>
+    {% endif %}
+    </li>
+  </ul>
+</nav>
+ 
+    {% endif %}
 {% endblock %}

@@ -15,7 +15,7 @@ from .models import Emotion,Tag,HotTags,HotEmos
 from Emoserver.users.models import SiteUser
 from .response import JSONResponse, response_mimetype
 from .serialize import serialize
-from .forms import UploadForm,registerForm,OthersUploadForm  
+from .forms import UploadForm,registerForm
 from .ajax import *
 from Emoserver.utils.decorators import admin_needed
 import json
@@ -191,18 +191,17 @@ class PictureCreateView(CreateView):
 
 class CreateemoForOthers(CreateView):
     model = Emotion
-    form_class = OthersUploadForm
-    template_name = "upload_new_for_others.html"
+    form_class = UploadForm
+    template_name = "upload_new.html"
     tag_pattern = re.compile("^[a-zA-Z\d\u0391-\uFFE5]{1,10}$")
     @method_decorator(admin_needed(login_url="/"))
     def dispatch(self, *args, **kwargs):
         return super(CreateemoForOthers, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
-        username=form.cleaned_data.get("username",None)
-
+        username = self.kwargs.get("author",None)
+        print username
         user_object=get_user_by_username(username)
-
         self.object = form.save(commit=False)
         self.object.emo_type = EMO_MOTION
         self.object.emo_upload_user = user_object
@@ -347,6 +346,7 @@ def AllEmoListView(request,page=1,page_count=20):
     page=request.GET.get('page',None)
     if page==None:
         page=1
+    page=int(page)
     object_list=Emotion.objects.filter(emo_bool_deleted=False,emo_img__isnull=False).order_by("-emo_popularity")
     try:
         paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
@@ -370,6 +370,7 @@ def SearchByAuthor(request,page=1,page_count=20):
     page=request.GET.get('page',None)
     if page==None:
         page=1
+    page=int(page)
     user_object=get_user_by_username(username)
     flag=1
     
@@ -400,6 +401,7 @@ def SearchByTag(request,page=1,page_count=20):
     page=request.GET.get('page',None)
     if page==None:
         page=1
+    page=int(page)
     cur_tag=get_tag_by_tagname(tag_name)
 
     flag=2
@@ -426,27 +428,44 @@ def SearchByTag(request,page=1,page_count=20):
 
 
 @admin_needed(login_url="/")
-def AddemoForOthers(request,page=1,page_count=20):
+def list_other_users(request,page=1,page_count=20):
 
     user_list=SiteUser.objects.all()
 
     page=request.GET.get('page',None)
     if page==None:
         page=1
-    object_list=Emotion.objects.all().exclude(emo_bool_deleted=True,emo_img__isnull=True).order_by("-emo_popularity")
+    page=int(page)
     try:
-        paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
+        paginator = Paginator(user_list, page_count) # Show 25 sub_emos per page
     except:
         return ret_status(400)
     flag=3
     try:
-        sub_emos = paginator.page(page)
+        sub_users = paginator.page(page)
     except PageNotAnInteger:
         # If page is not an integer, deliver first page.
-        sub_emos = paginator.page(page)
+        sub_users = paginator.page(page)
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
-        sub_emos = paginator.page(paginator.num_pages)
+        sub_users = paginator.page(paginator.num_pages)
     return render_to_response("list_other_users.html",locals(),context_instance=RequestContext(request))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

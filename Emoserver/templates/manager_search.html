@@ -114,33 +114,72 @@
         {% endfor%} 
         <div class="pagination">
             <span class="step-links">
+
+<nav>
+  <ul class="pagination">
+    <li>
+
                 {% if sub_emos.has_previous %}
                     {% ifequal flag 1%}
-                    <a href="?author={{user_object.username}}&page={{ sub_emos.previous_page_number }}">previous</a>
+                    <a href="?author={{user_object.username}}&page={{ sub_emos.previous_page_number }}" 
+                    aria-label="Previous"><span aria-hidden="true">previous</span></a>
                     {% endifequal %}
                     {% ifequal flag 2%}
-                    <a href="?tag={{cur_tag.tag_name}}&page={{ sub_emos.previous_page_number }}">previous</a>
+                    <a href="?tag={{cur_tag.tag_name}}&page={{ sub_emos.previous_page_number }}" 
+                    aria-label="Previous"><span aria-hidden="true">previous</span></a>
                     {% endifequal %}
                     {% ifequal flag 3%}
-                    <a href="?page={{ sub_emos.previous_page_number }}">previous</a>
+                    <a href="?page={{ sub_emos.previous_page_number }}" 
+                    aria-label="Previous"><span aria-hidden="true">previous</span></a>
                     {% endifequal %}
                 {% endif %}
+<!--                 
+                {% if sub_emos.has_next %}
+                
+                    {% ifequal flag 1%}
+                    <a href="?author={{user_object.username}}&page={{ sub_emos.next_page_number }}"  
+                    >        
+                    <span >{{sub_emos.next_page_number}}</span>
+                    </a>
+                    {% endifequal %}
 
+                    {% ifequal flag 2%}
+                    <a href="?tag={{cur_tag.tag_name}}&page={{ sub_emos.next_page_number }}" 
+                    aria-label="Next">        
+                    <span >{{sub_emos.next_page_number}}</span>
+                    </a>
+                    {% endifequal %}
+                    {% ifequal flag 3%}
+                    <a href="?page={{ sub_emos.next_page_number }}" aria-label="Next">
+                    <span >{{sub_emos.next_page_number}}</span>
+                    </a>
+                    {% endifequal %}
+                {% endif %}
+ -->
                 <span class="current">
-                    Page {{ sub_emos.number }} of {{ sub_emos.paginator.num_pages }}.
+                    Page {{ sub_emos.number }} of {{ sub_emos.paginator.num_pages }}
                 </span>
-
                 {% if sub_emos.has_next %}
                     {% ifequal flag 1%}
-                    <a href="?author={{user_object.username}}&page={{ sub_emos.next_page_number }}">next</a>
+                    <a href="?author={{user_object.username}}&page={{ sub_emos.next_page_number }}"  
+                    aria-label="Next">        
+                    <span aria-hidden="true">next</span>
+                    </a>
                     {% endifequal %}
                     {% ifequal flag 2%}
-                    <a href="?tag={{cur_tag.tag_name}}&page={{ sub_emos.next_page_number }}">next</a>
+                    <a href="?tag={{cur_tag.tag_name}}&page={{ sub_emos.next_page_number }}" 
+                    aria-label="Next">        
+                    <span aria-hidden="true">next</span></a>
                     {% endifequal %}
                     {% ifequal flag 3%}
-                    <a href="?page={{ sub_emos.next_page_number }}">next</a>
+                    <a href="?page={{ sub_emos.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">next</span></a>
                     {% endifequal %}
                 {% endif %}
+    </li>
+  </ul>
+</nav>
+
             </span>
         </div>
 

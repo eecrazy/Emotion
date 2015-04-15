@@ -69,9 +69,9 @@ urlpatterns = patterns('',
 	url(r'^userwork/view/(\d+)$', views.UserWorkListView.as_view(), name='userwork-view'),
 
 	#admin add emo for other users
-	url(r'^addemo/add/$', views.CreateemoForOthers.as_view(), name='upload-new'),
+	url(r'^addemo/add/author=(?P<author>.*)$', views.CreateemoForOthers.as_view()),
 	# url(r'^addemo/add/$', views.test, name='upload-new'),
-	url(r'^addemo/view$', views.AddemoForOthers, name='addemo_for_others'),
+	url(r'^addemo/view$', views.list_other_users),
 
 )
 
