@@ -2,8 +2,6 @@ search api
 
 1、按作者搜索表情
 
-注：会返回已经被删除的表情,通过is_deleted字段判断是否被删除
-
 /app/search/author=xxx&sortby=1&page=1&count=50
 
 参数分别为：
@@ -38,8 +36,6 @@ search api
 
 2、按标签搜索表情
 
-注：会返回已经被删除的表情,通过is_deleted字段判断是否被删除
-
 /app/search/tag=xxx&sortby=1&page=1&count=50
 
 参数分别为：
@@ -70,10 +66,40 @@ search api
 + "next_page":2//下一页，如果为负值-1，则不存在下一页
 + }
  
+3、返回首页数据
+
+/app/first_page/sortby=1&page=2&count=2
+
++ 返回的表情按照热度|时间排序（1为热度，热度最高的排在最前面；2为时间，最新更新的排在最前面），
++ 页码
++ 每页返回的数目
+
+失败返回{"status": 400}成功则返回数据格式如下：
+
++ {"status": 200,
++ "emos": [
++ {"emo_type": 2, //表情类型
++ "tags": [
++ {"id": 1804, "name": "\u9ad8\u5174","tag_popularity":2},//表情的标签信息
++ {"id": 2221, "name": "happy","tag_popularity":3}],
++ "emo_id": 2032, //表情ID
++ "author":"1110310214",//作者
++ "emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
++ "is_deleted": false,//是否已删除
++ "emo_popularity": 0,//热度
++ "emo_like": 0,//收藏数
++ "last_update":
++ },
++ ......
++ ],
++ "total_num":300,
++ "next_page":2 //下一页，如果为-1，则不存在下一页
++ }
+
 
 share api
 
-3、将用户的分享信息传回服务器
+4、将用户的分享信息传回服务器
 
 /app/share/save_share_info
 
@@ -92,7 +118,7 @@ share api
 如果成功返回{"status": 200}，否则返回{"status": 400}
 
 
-4、为每一个表情返回一个html页面用于转发或分享
+5、为每一个表情返回一个html页面用于转发或分享
 
 /app/share/emoid=1
 
@@ -101,8 +127,10 @@ url中参数只包含相应表情的id
 如果成功返回包含相应表情的html页面，否则返回{"status": 400}
 
 
-5、获取验证码
+6、获取验证码
+
 /get/valicode/mobile=15623242442
+
 成功返回数据：
 {"status": 200, "vali_code": "621566"}
 
@@ -110,8 +138,10 @@ url中参数只包含相应表情的id
 {"status": 400}
 
 
-6、校验验证码
-verify/valicode=621566
+7、校验验证码
+
+/verify/valicode=621566
+
 成功返回数据：
 {"status": 200}
 

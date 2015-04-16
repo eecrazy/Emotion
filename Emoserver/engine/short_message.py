@@ -5,6 +5,7 @@
 # Desc: 短信http接口的python代码调用示例
 import httplib
 import urllib
+import json
 #服务地址
 host = "yunpian.com"
 #端口号
@@ -61,24 +62,20 @@ def send_short_message(mobile=None,valicode=None):
         return 0
     if not valicode:
         return 0
-
-    text = "您的验证码是"+valicode+" 【逗脸】"
-    #查账户信息
-    # print(get_user_info(apikey))
-    #调用通用接口发短信
-    raw_response=send_sms(apikey, text, mobile)
-    return 1
-    # if 发送成功:
-    #     return 1
-    # else:
-    #     return 0
-
+    text = "您的验证码是"+valicode
+    raw_response=send_sms(apikey, text, mobile)    
+    data = json.loads(raw_response)
+    status=data.get("msg",None)
+    if status=="OK":
+        return 1
+    else:
+        return 0
 if __name__ == '__main__':
     apikey = "6854b8e7d98b9701fb031ca528523138"
     #查账户信息
     print(get_user_info(apikey))
     #调用通用接口发短信
-    text = "您的验证码是123456 【逗脸】"
+    text = "您的验证码是123456"
     mobile="15629181795"
     print(send_sms(apikey, text, mobile))
 

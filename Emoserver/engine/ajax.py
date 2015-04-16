@@ -629,9 +629,9 @@ def search_emos_by_author(request,username,sortby="1",page="1",page_count="12"):
 	ret_data={}
 
 	if sortby=="1": #热度，热度最高的排在最前面
-		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("-emo_popularity")
+		all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_popularity")
 	else:  #时间，最新更改的排在最前面
-		all_emos=Emotion.objects.filter(emo_upload_user=uid).order_by("-emo_last_update")
+		all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_last_update")
 	count=0
 	if all_emos:
 		try:
@@ -721,11 +721,10 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="12"):
 	ret_data={}
 
 	if sortby=="1": #热度，热度最高的排最前
-		all_emos=cur_tag.emo_list.all().order_by("-emo_popularity")
+		all_emos=cur_tag.emo_list.filter(emo_bool_deleted=False).order_by("-emo_popularity")
 	else:  #时间，最新更新的排最前
-		all_emos=cur_tag.emo_list.all().order_by("-emo_last_update")
+		all_emos=cur_tag.emo_list.filter(emo_bool_deleted=False).order_by("-emo_last_update")
 	count=0
-
 
 	if all_emos:
 		try:
@@ -776,7 +775,70 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="12"):
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
+def first_page_data(request,sortby="1",page="1",page_count="12"):
+	try:
+		page=int(page)
+		page_count=int(page_count)
+	except:
+		return ret_status(400)
+	ret_data={}
 
+	if sortby=="1": #热度，热度最高的排在最前面
+		all_emos=Emotion.objects.filter(emo_bool_deleted=False).order_by("-emo_popularity")
+	else:  #时间，最新更改的排在最前面
+		all_emos=Emotion.objects.filter(emo_bool_deleted=False).order_by("-emo_last_update")
+
+	if all_emos:
+		try:
+			emos_num=all_emos.count()
+		except:
+			return ret_status(400)
+		ret_data = dict()
+		ret_data["status"] = 200
+		ret_data["total_num"]=emos_num
+		ret_data["emos"]  = list()
+		try:
+			paginator = Paginator(all_emos, page_count) # Show 25 sub_emos per page
+		except:
+			return ret_status(400)
+		try:
+			sub_emos = paginator.page(page)
+		except PageNotAnInteger:
+			# If page is not an integer, deliver first page.
+			sub_emos = paginator.page(1)
+		except EmptyPage:
+			# If page is out of range (e.g. 9999), deliver last page of results.
+			sub_emos = paginator.page(paginator.num_pages)
+
+		if page==paginator.num_pages:
+			ret_data["next_page"]=(-1)
+		elif page>=1 and page<paginator.num_pages:
+			ret_data["next_page"]=page+1
+		else:
+			ret_status(400)
+
+		for emo in sub_emos:
+			tmpdict = dict()
+			tmpdict["emo_type"] = emo.emo_type
+			tmpdict["emo_id"] = emo.emo_id
+			tmpdict["author"] = str(emo.emo_upload_user)
+			tmpdict["emo_detail"] = str(emo.emo_img)
+			tmpdict["is_deleted"] = emo.emo_bool_deleted
+			tmpdict["emo_popularity"] = emo.emo_popularity
+			tmpdict["emo_like"] = emo.emo_like_num
+			tmpdict["last_update"]=emo.emo_last_update
+			tmpdict["tags"] = list()
+			tags=emo.emo_tag_list.all()
+			for tag in tags:
+				tag_dict={}
+				tag_dict["id"]=tag.tag_id
+				tag_dict["name"]=tag.tag_name
+				tag_dict["tag_popularity"]=tag.tag_popularity
+				tmpdict["tags"].append(tag_dict)
+			ret_data["emos"].append(tmpdict)
+
+		return HttpResponse(json.dumps(ret_data))
+	return ret_status(400)
 
 def get_emo_html(request,emoid):
 	try:
@@ -808,38 +870,33 @@ def save_share_info(request):
 			return ret_status(400)
 		emo_id = share_data.get("emo_id",None)		
 		share_type = share_data.get("share_type",None)		
-		print share_data
+		if not emo_id:
+			return ret_status(400)
+		if not share_type:
+			return ret_status(400)
 		emo_object = None
 		try:
-			if emo_id:
-				try:
-					emo_object = Emotion.objects.get(emo_id=int(emo_id))
-				except:
-					return ret_status(400)
-			else:
+			try:
+				emo_object = Emotion.objects.get(emo_id=int(emo_id))
+			except:
 				return ret_status(400)
-
 			if emo_object:
-				if share_type:
-					emo_object.emo_popularity+=1
-					if share_type=="1":
-						emo_object.weixin_send_num+=1
-					elif share_type=="2":
-						emo_object.weixin_share_num+=1
-					elif share_type=="3":
-						emo_object.weibo_share_num+=1
-					else:
-						emo_object.emo_like_num+=1				
-					emo_object.save()
-					return ret_status(200)
+				emo_object.emo_popularity+=1
+				if share_type=="1":
+					emo_object.weixin_send_num+=1
+				elif share_type=="2":
+					emo_object.weixin_share_num+=1
+				elif share_type=="3":
+					emo_object.weibo_share_num+=1
 				else:
-					return ret_status(400)
+					emo_object.emo_like_num+=1				
+				emo_object.save()
+				return ret_status(200)
 			else:
 				return ret_status(400)
 		except:
 			return ret_status(400)
 	return ret_status(400)
-
 
 def get_and_save_vali_code(request,mobile=None):
 	if not mobile:
