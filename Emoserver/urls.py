@@ -70,8 +70,12 @@ urlpatterns = patterns('',
 
 	#admin add emo for other users
 	url(r'^addemo/add/author=(?P<author>.*)$', views.CreateemoForOthers.as_view()),
-	# url(r'^addemo/add/$', views.test, name='upload-new'),
 	url(r'^addemo/view$', views.list_other_users),
+
+	#get and verify the valicode 
+	url(r'^get/valicode/mobile=(?P<mobile>.*)$', ajax.get_and_save_vali_code),
+	url(r'^verify/valicode=(?P<vali_code>.*)$', ajax.verify_vali_code),
+
 
 )
 

@@ -99,3 +99,21 @@ share api
 url中参数只包含相应表情的id
 
 如果成功返回包含相应表情的html页面，否则返回{"status": 400}
+
+
+5、获取验证码
+/get/valicode/mobile=15623242442
+成功返回数据：
+{"status": 200, "vali_code": "621566"}
+
+失败返回：
+{"status": 400}
+
+
+6、校验验证码
+verify/valicode=621566
+成功返回数据：
+{"status": 200}
+
+失败返回：
+{"status": 400}

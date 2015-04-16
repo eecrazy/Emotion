@@ -12,7 +12,7 @@
         clear: both;
         width: 100%;
     }
-    .list{
+    .list {
         color: #282828;
         font-size: 20px;
         margin-top: 10px;
@@ -20,6 +20,14 @@
         margin-right: 40px;
         padding: 5px,10px,5px,10px;
         float: left;
+        color: #00BDF3;
+    }
+    a.link{
+        color: #00BDF3;
+        text-decoration: none;
+    }
+    a.link:hover{
+        color: red;
     }
 
 </style>
@@ -35,7 +43,7 @@
             {% if user %}
             <div class="list">
             {{forloop.counter}}: 
-            <a href="/addemo/add/author={{user.username}}">{{user.username}}</a><br>
+            <a href="/addemo/add/author={{user.username}}" class="link">{{user.username}}</a><br>
             </div>
             {% endif %} 
         {% endfor%} 

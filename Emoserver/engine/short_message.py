@@ -5,7 +5,6 @@
 # Desc: 短信http接口的python代码调用示例
 import httplib
 import urllib
-
 #服务地址
 host = "yunpian.com"
 #端口号
@@ -56,16 +55,36 @@ def tpl_send_sms(apikey, tpl_id, tpl_value, mobile):
     conn.close()
     return response_str
 
+def send_short_message(mobile=None,valicode=None):
+    apikey = "6854b8e7d98b9701fb031ca528523138"
+    if not mobile:
+        return 0
+    if not valicode:
+        return 0
+
+    text = "您的验证码是"+valicode+" 【逗脸】"
+    #查账户信息
+    # print(get_user_info(apikey))
+    #调用通用接口发短信
+    raw_response=send_sms(apikey, text, mobile)
+    return 1
+    # if 发送成功:
+    #     return 1
+    # else:
+    #     return 0
+
 if __name__ == '__main__':
-    apikey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    mobile = "188xxxxxxxx"
-    text = "您的验证码是1234【云片网】"
+    apikey = "6854b8e7d98b9701fb031ca528523138"
     #查账户信息
     print(get_user_info(apikey))
     #调用通用接口发短信
+    text = "您的验证码是123456 【逗脸】"
+    mobile="15629181795"
     print(send_sms(apikey, text, mobile))
-    #调用模板接口发短信
-    tpl_id = 1 #对应的模板内容为：您的验证码是#code#【#company#】
-    tpl_value = '#code#=1234&#company#=云片网'
-    print(tpl_send_sms(apikey, tpl_id, tpl_value, mobile))
+
+
+
+
+
+
                             
