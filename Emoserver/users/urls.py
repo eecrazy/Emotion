@@ -25,6 +25,10 @@ urlpatterns = patterns('',
 
 
     url(r'^account/logout/$', views.logout, name='siteuser_logout'),
+
+    #get and verify the valicode 
+    # url(r'^get/valicode/$', views.get_and_save_vali_code),
+    # url(r'^verify/valicode=(?P<vali_code>.*)$', views.verify_vali_code),
 )
 
 

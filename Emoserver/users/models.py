@@ -112,6 +112,11 @@ class SiteUser(models.Model):
             return self.avatar_url
         return AVATAR_URL_PREFIX + self.avatar_name
 
+class ValidationCode(models.Model):
+    vali_code_id = models.AutoField(primary_key=True)
+    vali_code = models.CharField(max_length=64)
+    # A date and time, represented in Python by a datetime.datetime instance
+    expire_time = models.DateTimeField(auto_now=False)
 
 # def _save_avatar_in_db(sender, uid, avatar_name, **kwargs):
 #     if not SiteUser.objects.filter(id=uid, is_social=False).exists():

@@ -47,24 +47,29 @@
         // register 
         $('#siteuserRegister').click(function(e){
             e.preventDefault();
-            var email, username, passwd, passwd2, _tmp_email, referer;
+            var email, username, passwd, passwd2, valicode, _tmp_email, referer;
             email = $('#siteuserRegEmail').val();
             username = $('#siteuserRegUsername').val();
             passwd = $('#siteuserRegPassword').val();
             passwd2 = $('#siteuserRegPassword2').val();
+            valicode = $('#siteuserRegValicode').val();
             email = strip(email);
+            valicode=strip(valicode)
             username = strip(username);
             passwd = strip(passwd);
             passwd2 = strip(passwd2);
 
             _tmp_email = email.replace(/^.+@.+\..+$/, '');
             if(_tmp_email.length>0){
-                make_warning('#siteuserRegisterWarning', '目测邮箱格式不正确啊');
+                make_warning('#siteuserRegisterWarning', 'haha');
                 return;
             }
-
+            if(email.length === 0){
+            make_warning('#siteuserRegisterWarning', "haha");
+            return;
+            }
             if(email.length === 0 || username.length === 0 || passwd.length === 0 || passwd2.length === 0) {
-                make_warning('#siteuserRegisterWarning', '请完整填写注册信息');
+                make_warning('#siteuserRegisterWarning', '请dd填写注册信息');
                 return;
             }
 
@@ -81,6 +86,7 @@
                         email: email,
                         username: username,
                         passwd: passwd,
+                        valicode: valicode,
                         csrfmiddlewaretoken: get_csrf()
                     },
                     dateType: 'json',

@@ -34,6 +34,7 @@ class UploadForm(forms.ModelForm):
 
 class registerForm(forms.ModelForm):
 	email = forms.EmailField(required=True)	
+	valicode = forms.CharField(max_length=6,min_length=1,required=True)
 	class Meta:
 		model = User
 		fields = ["username","password"]

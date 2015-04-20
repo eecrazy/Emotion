@@ -3,7 +3,8 @@ import re
 import json
 import hashlib
 from functools import wraps
-
+from short_message  import *
+from datetime import *
 from django.core import signing
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -14,7 +15,7 @@ from django.core.mail import EmailMultiAlternatives
 #from django.core.mail import EmailMessage
 
 
-from Emoserver.users.models import InnerUser, SiteUser, SocialUser
+from Emoserver.users.models import InnerUser, SiteUser, SocialUser,ValidationCode
 #from Emoserver.users.tasks import send_mail
 from Emoserver.settings import (
     USING_SOCIAL_LOGIN,
@@ -186,11 +187,14 @@ class SiteUserRegisterView(user_defined_mixin(), SiteUserMixIn, View):
     @inner_account_ajax_guard
     def post(self, request, *args, **kwargs):
         email = request.POST.get('email', None)
+        valicode = request.POST.get('valicode', None)
+        mobile = request.POST.get('mobile', None)
         username = request.POST.get('username', None)
         passwd = request.POST.get('passwd', None)
 
         if not email or not username or not passwd:
             raise InnerAccoutError('请完整填写注册信息')
+        # raise InnerAccoutError(request.POST)
 
         if len(email) > MAX_EMAIL_LENGTH:
             raise InnerAccoutError('电子邮件地址太长')
@@ -206,11 +210,29 @@ class SiteUserRegisterView(user_defined_mixin(), SiteUserMixIn, View):
 
         if SiteUser.objects.filter(username=username).exists():
             raise InnerAccoutError('用户名已存在')
+        if not mobile:
+            raise InnerAccoutError('请填写手机号')
+        if len(mobile)!=11:
+            raise InnerAccoutError('手机号格式不正确')
+        
+        if not valicode:
+            raise InnerAccoutError('请填写验证码')
 
+        if len(valicode)==0:
+            num=get_and_save_vali_code(mobile=mobile)
+            print num
+            if num==0:
+                raise InnerAccoutError('验证码未发送成功,请重试')
+        if len(valicode)!=6:
+            raise InnerAccoutError('验证码格式不正确')
+        else:
+            num=verify_vali_code(vali_code=valicode)
+            # print num
+            if num!=1:
+                raise InnerAccoutError('验证码未通过验证')
         passwd = make_password(passwd)
         user = InnerUser.objects.create(email=email, passwd=passwd, username=username)
         request.session['uid'] = user.user.id
-
 
 class SiteUserResetPwStepOneView(user_defined_mixin(), SiteUserMixIn, View):
     """丢失密码重置第一步，填写注册时的电子邮件"""
@@ -406,3 +428,49 @@ def social_login_callback(request, sitename):
     # set uid in session, then this user will be auto login
     request.session['uid'] = user.user.id
     return HttpResponseRedirect(SOCIAL_LOGIN_DONE_REDIRECT_URL)
+
+def get_and_save_vali_code(mobile=None):
+    if not mobile:
+        return 0
+    print mobile
+    try:
+        vali_code_object=ValidationCode()
+        cur_datetime=datetime.now()
+        vali_code_object.vali_code=str(cur_datetime.microsecond)
+        expire_time= cur_datetime+timedelta(3)
+        vali_code_object.expire_time=expire_time
+        vali_code_object.save() 
+    except:
+        return 0
+    try:
+        # ret_data={}
+        # ret_data["status"] =  200
+        # ret_data["vali_code"]=vali_code_object.vali_code
+        num=send_short_message(mobile,vali_code_object.vali_code)
+        if num==1:
+            return 1
+        else:
+            return 0
+    except:
+        return 0
+
+#验证用户发来的验证码是否在数据库中，如果在的话是否过期
+def verify_vali_code(vali_code=None):
+    if not vali_code:
+        return 0
+    try:
+        vali_code_object=ValidationCode.objects.get(vali_code=vali_code)
+    except:
+        return 0
+    try:
+        expire_time=vali_code_object.expire_time
+        # print expire_time
+    except:
+        return 0
+    cur_time=datetime.now()
+    # print cur_time
+    expire_time = datetime.strptime(str(expire_time).rstrip("+00:00"), "%Y-%m-%d %H:%M:%S") 
+    if expire_time<cur_time:
+        return 0
+    return 1
+

@@ -3,7 +3,7 @@ from django.template import Template,Context
 from django.shortcuts import render_to_response,RequestContext
 from django.http import HttpResponse
 from Emoserver.users.models import SiteUser
-from models import Emotion,Tag,HotTags,HotEmos,ValidationCode
+from models import Emotion,Tag,HotTags,HotEmos
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from Emoserver.utils.decorators import admin_needed
@@ -230,8 +230,9 @@ def get_hotemos(request):
 		for hotemo in all_hotemos:
 			tmpdict = dict()
 			tmpdict["name"] = hotemo.hotemo_category
-			tmpdict["emos"] = [emo.emo_id for emo in hotemo.hotemo_list.all()]
-			#ret_data["categories"][hotemo.hotemo_category] = 
+			#加上按照热度排序的函数
+			tmpdict["emos"] = [emo.emo_id for emo in hotemo.hotemo_list.filter(emo_bool_deleted=False).order_by("-emo_popularity")]
+
 			ret_data["categories"].append(tmpdict)
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
@@ -630,8 +631,8 @@ def search_emos_by_author(request,username,sortby="1",page="1",page_count="12"):
 
 	if sortby=="1": #热度，热度最高的排在最前面
 		all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_popularity")
-	else:  #时间，最新更改的排在最前面
-		all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_last_update")
+	else:  #时间，最新上传的排在最前
+		all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("emo_id")
 	count=0
 	if all_emos:
 		try:
@@ -722,8 +723,8 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="12"):
 
 	if sortby=="1": #热度，热度最高的排最前
 		all_emos=cur_tag.emo_list.filter(emo_bool_deleted=False).order_by("-emo_popularity")
-	else:  #时间，最新更新的排最前
-		all_emos=cur_tag.emo_list.filter(emo_bool_deleted=False).order_by("-emo_last_update")
+	else:  #时间，最新上传的排在最前
+		all_emos=cur_tag.emo_list.filter(emo_bool_deleted=False).order_by("emo_id")
 	count=0
 
 	if all_emos:
@@ -772,71 +773,6 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="12"):
 			tmpdict["emo_like"] = emo.emo_like_num
 			tmpdict["last_update"]=emo.emo_last_update
 			ret_data["emos"].append(tmpdict)
-		return HttpResponse(json.dumps(ret_data))
-	return ret_status(400)
-
-def first_page_data(request,sortby="1",page="1",page_count="12"):
-	try:
-		page=int(page)
-		page_count=int(page_count)
-	except:
-		return ret_status(400)
-	ret_data={}
-
-	if sortby=="1": #热度，热度最高的排在最前面
-		all_emos=Emotion.objects.filter(emo_bool_deleted=False).order_by("-emo_popularity")
-	else:  #时间，最新更改的排在最前面
-		all_emos=Emotion.objects.filter(emo_bool_deleted=False).order_by("-emo_last_update")
-
-	if all_emos:
-		try:
-			emos_num=all_emos.count()
-		except:
-			return ret_status(400)
-		ret_data = dict()
-		ret_data["status"] = 200
-		ret_data["total_num"]=emos_num
-		ret_data["emos"]  = list()
-		try:
-			paginator = Paginator(all_emos, page_count) # Show 25 sub_emos per page
-		except:
-			return ret_status(400)
-		try:
-			sub_emos = paginator.page(page)
-		except PageNotAnInteger:
-			# If page is not an integer, deliver first page.
-			sub_emos = paginator.page(1)
-		except EmptyPage:
-			# If page is out of range (e.g. 9999), deliver last page of results.
-			sub_emos = paginator.page(paginator.num_pages)
-
-		if page==paginator.num_pages:
-			ret_data["next_page"]=(-1)
-		elif page>=1 and page<paginator.num_pages:
-			ret_data["next_page"]=page+1
-		else:
-			ret_status(400)
-
-		for emo in sub_emos:
-			tmpdict = dict()
-			tmpdict["emo_type"] = emo.emo_type
-			tmpdict["emo_id"] = emo.emo_id
-			tmpdict["author"] = str(emo.emo_upload_user)
-			tmpdict["emo_detail"] = str(emo.emo_img)
-			tmpdict["is_deleted"] = emo.emo_bool_deleted
-			tmpdict["emo_popularity"] = emo.emo_popularity
-			tmpdict["emo_like"] = emo.emo_like_num
-			tmpdict["last_update"]=emo.emo_last_update
-			tmpdict["tags"] = list()
-			tags=emo.emo_tag_list.all()
-			for tag in tags:
-				tag_dict={}
-				tag_dict["id"]=tag.tag_id
-				tag_dict["name"]=tag.tag_name
-				tag_dict["tag_popularity"]=tag.tag_popularity
-				tmpdict["tags"].append(tag_dict)
-			ret_data["emos"].append(tmpdict)
-
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 

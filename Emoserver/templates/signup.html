@@ -10,13 +10,13 @@
             </div>
             <div class="modal-body">
                 <div class="panel panel-info">
-                    <div class="panel-heading">
+<!--                     <div class="panel-heading">
                         <div class="panel-title">登陆</div>
                         <div style="float:right; font-size: 85%; position: relative; top:-10px">
                              <a data-toggle="modal" data-target="#loginModal">注册</a>
                         </div>
                     </div>
-                    <div class="panel-body">
+ -->                    <div class="panel-body">
                         <form  id="signupform" class="form-horizontal" role="form">
                             {% csrf_token %} 
 
@@ -51,6 +51,18 @@
                                     <input id="siteuserRegEmail" type="text" class="form-control" name="email" placeholder="邮箱,将用于登录和密码找回">
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label for="mobile" class="col-md-3 control-label">手机号</label>
+                                <div class="col-md-9">
+                                    <input id="siteuserRegMobile" type="text" class="form-control" name="mobile" placeholder="手机号,填写后点击注册获取验证码">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="valicode" class="col-md-3 control-label">验证码</label>
+                                <div class="col-md-9">
+                                    <input id="siteuserRegValicode" type="text" class="form-control" name="valicode" placeholder="6位验证码">
+                                </div>
+                            </div>
 
 <!--                             <div class="form-group">
                                 <label for="firstname" class="col-md-3 control-label">First Name</label>
@@ -69,8 +81,8 @@
                             <div class="form-group">
                                 <!-- Button -->
                                 <div class="col-md-offset-3 col-md-9">
-                                    <button id="siteuserRegister" class="btn btn-info"><i class="icon-hand-right"></i> &nbsp; 登陆</button>
-                                    <span style="margin-left:8px;">or</span> 
+                                    <button id="siteuserRegister" class="btn btn-info"><i class="icon-hand-right"></i> &nbsp; 注册</button>
+                                    <span style="margin-left:8px;"></span> 
                                 </div>
                                     <div id="siteuserRegisterWarning" class="alert alert-danger" style="display: none;">
                                     </div>

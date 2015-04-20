@@ -380,7 +380,7 @@ def SearchByAuthor(request,page=1,page_count=20):
     else:
         uid=user_object.id
         object_list=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False,\
-            emo_img__isnull=False).order_by("-emo_popularity")
+            emo_img__isnull=False).order_by("emo_id")
         try:
             paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
         except:
@@ -410,7 +410,7 @@ def SearchByTag(request,page=1,page_count=20):
         object_list=None
     else:
         object_list=cur_tag.emo_list.filter(emo_bool_deleted=False,emo_img__isnull=False).\
-                order_by("-emo_popularity")
+                order_by("emo_id")
 
         try:
             paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page

@@ -20,8 +20,6 @@ urlpatterns = patterns('',
 	#search emos by tag
 	#/app/search/tag=xxx&sortby=1&page=1&count=50
 	url(r'^app/search/tag=(?P<tag_name>.*)&sortby=(?P<sortby>[1-2]{1})&page=(?P<page>\d+)&count=(?P<page_count>\d+)$',ajax.search_emos_by_tag),
-	#return the first page data
-	url(r'^app/first_page/sortby=(?P<sortby>[1-2]{1})&page=(?P<page>\d+)&count=(?P<page_count>\d+)$',ajax.first_page_data),
 
 	#return the emo html to share 
 	url(r'^app/share/emoid=(?P<emoid>\d+)$',ajax.get_emo_html),
@@ -74,9 +72,6 @@ urlpatterns = patterns('',
 	url(r'^addemo/add/author=(?P<author>.*)$', views.CreateemoForOthers.as_view()),
 	url(r'^addemo/view$', views.list_other_users),
 
-	#get and verify the valicode 
-	url(r'^get/valicode/mobile=(?P<mobile>.*)$', ajax.get_and_save_vali_code),
-	url(r'^verify/valicode=(?P<vali_code>.*)$', ajax.verify_vali_code),
 
 
 )

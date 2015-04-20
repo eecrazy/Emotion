@@ -63,7 +63,8 @@ def send_short_message(mobile=None,valicode=None):
     if not valicode:
         return 0
     text = "您的验证码是"+valicode
-    raw_response=send_sms(apikey, text, mobile)    
+    raw_response=send_sms(apikey, text, mobile)
+    print raw_response    
     data = json.loads(raw_response)
     status=data.get("msg",None)
     if status=="OK":

@@ -68,34 +68,8 @@ search api
  
 3、返回首页数据
 
-/app/first_page/sortby=1&page=2&count=2
-
-+ 返回的表情按照热度|时间排序（1为热度，热度最高的排在最前面；2为时间，最新更新的排在最前面），
-+ 页码
-+ 每页返回的数目
-
-失败返回{"status": 400}成功则返回数据格式如下：
-
-+ {"status": 200,
-+ "emos": [
-+ {"emo_type": 2, //表情类型
-+ "tags": [
-+ {"id": 1804, "name": "\u9ad8\u5174","tag_popularity":2},//表情的标签信息
-+ {"id": 2221, "name": "happy","tag_popularity":3}],
-+ "emo_id": 2032, //表情ID
-+ "author":"1110310214",//作者
-+ "emo_detail": "/media/7/1.41904683968e%2B126JmFWDj3UNmMM.gif",//表情位置
-+ "is_deleted": false,//是否已删除
-+ "emo_popularity": 0,//热度
-+ "emo_like": 0,//收藏数
-+ "last_update":
-+ },
-+ ......
-+ ],
-+ "total_num":300,
-+ "next_page":2 //下一页，如果为-1，则不存在下一页
-+ }
-
+获取热门表情：加入按照流行度排序,被删除的表情不会被返回
+热门标签
 
 share api
 
