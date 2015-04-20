@@ -2,12 +2,30 @@
 {% load upload_tags %}
 
 
-{%block title%} diplay {% endblock %}
+{%block title%} my emos {% endblock %}
 
 {%block css_script %}
 <link href="{{ STATIC_URL }}css/jquery.tagsinput.css" rel="stylesheet">
 
 <style type="text/css">
+
+    .search_box {
+      margin-top: 20px;
+      width: 100%;
+    }
+    .search_input{
+        width: 20%;
+        margin-bottom: 5px;
+        margin-right: 10px;
+        float: left;
+    }
+    .search_btn{
+        margin-top: 5px;
+        width: 40px;
+    }
+    .search_btn{
+
+    }
     .imgbox {
         background-color: #ffffff;
         padding: 10px;
@@ -25,6 +43,10 @@
         font-size: 40px;
 
     }
+    .pagination {
+        clear: both;
+        width: 100%;
+    }
 
 </style>
 
@@ -33,52 +55,65 @@
 
 
 {% block display %}
+    
     {% if object_list %}
-        {% for emo in object_list %} 
+        {% for emo in sub_emos %} 
             {% if emo.emo_img %}
             <div class="col-md-3 column imgbox">
-                <img width="200px" height="200px" src="{{emo.emo_img.url}}"  />
+                <img width="190px" height="200px" src="{{emo.emo_img.url}}" />
 
                 <div class="imgtags">
                 <input class="form-control tag_form" pk="{{emo.pk}}" value="{{ emo.emo_init_tag_list|joinby:'tag_name'}}">
                 </div>
 
-                <div class="popularity_tag" style="margin-top:12px;font-size:13px;float:left;">
-                <span>流行度:  {{ emo.emo_popularity}}</span>
+                <div class="popularity_tag" style="margin-top:12px;font-size:13px;">
+                <span>作者:  {{ emo.emo_upload_user}}</span>
+                </div>
+
+                <div class="popularity_tag" style="margin-top:12px;font-size:13px;">
+                <!-- <span>流行度:  {{ emo.emo_popularity}}</span> -->
+                <span style="margin-right:30px;">用户收藏:  {{ emo.emo_like_num}}</span>
+                <span style="margin-right:0px;">微博分享:  {{ emo.weibo_share_num}}</span><br>
+                <span style="margin-right:30px;">微信分享:  {{ emo.weixin_share_num}}</span>
+                <span style="margin-right:10px;">微信转发:  {{ emo.weixin_send_num}}</span>
                 </div>
 
                 <div class="pull-right" style="margin-top:5px;">
-                
                 <a href="/upload/delete/{{emo.pk}}" class="btn btn-danger btn-sm">
                 <i class="glyphicon glyphicon-trash"></i>
                 <span>删除</span>
                 </a>
+                
                 </div>
-
             </div>
             {% endif %} 
         {% endfor%} 
-    {% endif %}
+        <div class="pagination">
+            <span class="step-links">
 
+<nav>
+  <ul class="pagination">
+    <li>
 
-<!--    {% if is_paginated %}
-        <div class="pagination pull-right">
-            <span class="page-links">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% if sub_emos.has_previous %}
+                    <a href="?page={{ sub_emos.previous_page_number }}" 
+                    aria-label="Previous"><span aria-hidden="true">previous</span></a>
                 {% endif %}
-                <span class="page-current">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                <span class="current">
+                    Page {{ sub_emos.number }} of {{ sub_emos.paginator.num_pages }}
                 </span>
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                {% if sub_emos.has_next %}
+                    <a href="?page={{ sub_emos.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">next</span></a>
                 {% endif %}
+    </li>
+  </ul>
+</nav>
+
             </span>
         </div>
 
     {% endif %}
-
--->
 
 <script type="text/javascript">
 
@@ -102,11 +137,12 @@
                 });
             },
             "onRemoveTag": function(tag) {
-
+                    console.log("remove")
                 $(".tagsinput").hover(function(e){
                     hover_input = e.currentTarget.id.slice(0,-10)
                     pk = $("#" + hover_input).attr("pk");
-
+                    console.log(pk)
+                    console.log(tag)
                     $.getJSON("/removetag", {
                         "pk": pk,
                         "tag": tag
@@ -115,11 +151,9 @@
                     });
                     $(".tagsinput").unbind('mouseenter mouseleave');
                 });
-                }
+            }
 
         });
-
-
     });
 </script>
 

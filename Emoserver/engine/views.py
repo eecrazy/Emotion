@@ -12,13 +12,14 @@ from django.utils.decorators import method_decorator
 from django.core.urlresolvers import reverse
 from django.db.models import Count
 from .models import Emotion,Tag,HotTags,HotEmos
-from Emoserver.users.models import SiteUser
+from Emoserver.users.models import SiteUser,ValidationCode
 from .response import JSONResponse, response_mimetype
 from .serialize import serialize
 from .forms import UploadForm,registerForm
 from .ajax import *
 from Emoserver.utils.decorators import admin_needed
 import json
+from short_message  import *
 from base64 import *
 import re 
 import sys
@@ -273,31 +274,27 @@ class PictureDeleteView(DeleteView):
 
 
 
-
-class PictureListView(ListView):
-    #model = Emotion
-    #context_object_name = "emotion_list" 
-    template_name = "upload_view.html"
-    #paginate_by = 100
-
-    @method_decorator(login_needed(login_url="/"))
-    def dispatch(self, *args, **kwargs):
-        return super(PictureListView, self).dispatch(*args, **kwargs)
-    # def get_context_data(self, **kwargs):
-    #     # Call the base implementation first to get a context
-    #     context = super(PictureListView, self).get_context_data(**kwargs)
-    #     # add the request to the context
-    #     context.update({'request':self.request})
-    #     return context
-    # def render_to_response(self, context, **response_kwargs):
-    #     files = [ serialize(p) for p in self.get_queryset() if p.emo_img]
-    #     data = {'files': files}
-    #     response = JSONResponse(data, mimetype=response_mimetype(self.request))
-    #     response['Content-Disposition'] = 'inline; filename=files.json'
-    #     return response
-    def get_queryset(self):
-        return Emotion.objects.filter(emo_upload_user=self.request.siteuser,emo_bool_deleted=False)\
+@login_needed(login_url="/")
+def PictureListView(request,page=1,page_count=2):
+    page=request.GET.get('page',None)
+    if page==None:
+        page=1
+    page=int(page)
+    object_list=Emotion.objects.filter(emo_upload_user=request.siteuser,emo_bool_deleted=False)\
                 .exclude(emo_img__isnull=True).order_by("-emo_popularity")
+    try:
+        paginator = Paginator(object_list, page_count) # Show 25 sub_emos per page
+    except:
+        return ret_status(400)
+    try:
+        sub_emos = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        sub_emos = paginator.page(page)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        sub_emos = paginator.page(paginator.num_pages)
+    return render_to_response("upload_view.html",locals(),context_instance=RequestContext(request))
 
 
 
@@ -453,11 +450,35 @@ def list_other_users(request,page=1,page_count=20):
     return render_to_response("list_other_users.html",locals(),context_instance=RequestContext(request))
 
 
+@admin_needed(login_url="/")
+def get_mobile(request):
+    return render_to_response("get_mobile.html",locals(),context_instance=RequestContext(request))
 
+@admin_needed(login_url="/")
+def get_and_save_vali_code(request):
+    mobile=request.GET.get('mobile',None)
 
-
-
-
+    if not mobile:
+        message="发生错误，验证码没有发送成功"
+    try:
+        vali_code_object=ValidationCode()
+        cur_datetime=datetime.now()
+        vali_code_object.vali_code=str(cur_datetime.microsecond)
+        expire_time= cur_datetime+timedelta(3)
+        vali_code_object.expire_time=expire_time
+        vali_code_object.is_used=False
+    except:
+        message="发生错误，验证码没有发送成功"
+    try:
+        num=send_short_message(mobile,vali_code_object.vali_code)
+        if num==1:
+            message="验证码发送成功"
+            vali_code_object.save() 
+        else:
+            message="发生错误，验证码没有发送成功"
+    except:
+        message="发生错误，验证码没有发送成功"
+    return render_to_response("valicode_status.html",locals(),context_instance=RequestContext(request))
 
 
 

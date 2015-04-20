@@ -188,7 +188,7 @@ class SiteUserRegisterView(user_defined_mixin(), SiteUserMixIn, View):
     def post(self, request, *args, **kwargs):
         email = request.POST.get('email', None)
         valicode = request.POST.get('valicode', None)
-        mobile = request.POST.get('mobile', None)
+        # mobile = request.POST.get('mobile', None)
         username = request.POST.get('username', None)
         passwd = request.POST.get('passwd', None)
 
@@ -210,21 +210,19 @@ class SiteUserRegisterView(user_defined_mixin(), SiteUserMixIn, View):
 
         if SiteUser.objects.filter(username=username).exists():
             raise InnerAccoutError('用户名已存在')
-        if not mobile:
-            raise InnerAccoutError('请填写手机号')
-        if len(mobile)!=11:
-            raise InnerAccoutError('手机号格式不正确')
+        # if not mobile:
+        #     raise InnerAccoutError('请填写手机号')
+        # if len(mobile)!=11:
+        #     raise InnerAccoutError('手机号格式不正确')
         
         if not valicode:
             raise InnerAccoutError('请填写验证码')
 
-        if len(valicode)==0:
-            num=get_and_save_vali_code(mobile=mobile)
-            print num
-            if num==0:
-                raise InnerAccoutError('验证码未发送成功,请重试')
-        if len(valicode)!=6:
-            raise InnerAccoutError('验证码格式不正确')
+        # if len(valicode)==0:
+        #     num=get_and_save_vali_code(mobile=mobile)
+        #     print num
+        #     if num==0:
+        #         raise InnerAccoutError('验证码未发送成功,请重试')
         else:
             num=verify_vali_code(vali_code=valicode)
             # print num
@@ -429,7 +427,11 @@ def social_login_callback(request, sitename):
     request.session['uid'] = user.user.id
     return HttpResponseRedirect(SOCIAL_LOGIN_DONE_REDIRECT_URL)
 
-def get_and_save_vali_code(mobile=None):
+
+def get_and_save_vali_code(request):
+    mobile=request.GET.get('mobile',None)
+    if not mobile:
+        message="发生错误";
     if not mobile:
         return 0
     print mobile
@@ -470,7 +472,9 @@ def verify_vali_code(vali_code=None):
     cur_time=datetime.now()
     # print cur_time
     expire_time = datetime.strptime(str(expire_time).rstrip("+00:00"), "%Y-%m-%d %H:%M:%S") 
-    if expire_time<cur_time:
+    if expire_time<cur_time or vali_code_object.is_used==True:
         return 0
+    vali_code_object.is_used=True
+    vali_code_object.save()
     return 1
 

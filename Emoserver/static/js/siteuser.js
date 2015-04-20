@@ -53,9 +53,8 @@
             passwd = $('#siteuserRegPassword').val();
             passwd2 = $('#siteuserRegPassword2').val();
             valicode = $('#siteuserRegValicode').val();
-            mobile = $('#siteuserRegMobile').val();
+            // mobile = $('#siteuserRegMobile').val();
             email = strip(email);
-            mobile = strip(mobile);
             valicode = strip(valicode);
             username = strip(username);
             passwd = strip(passwd);
@@ -76,12 +75,12 @@
                 make_warning('#siteuserRegisterWarning', '两次密码不一致');
                 return;
             }
-            if(mobile.length ===0) {
-                make_warning('#siteuserRegisterWarning', '请填写手机号');
-                return;
-            }
+            // if(mobile.length ===0) {
+            //     make_warning('#siteuserRegisterWarning', '请填写手机号');
+            //     return;
+            // }
             if(valicode.length ===0) {
-                valicode=""
+                make_warning('#siteuserRegisterWarning', '请填写验证码');
             }
 
             $.ajax(
@@ -92,7 +91,6 @@
                         email: email,
                         username: username,
                         passwd: passwd,
-                        mobile: mobile,
                         valicode: valicode,
                         csrfmiddlewaretoken: get_csrf()
                     },

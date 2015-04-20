@@ -36,7 +36,6 @@ urlpatterns = patterns('',
 	url(r'^removetag$',ajax.removetag),
 
 
-
 	#hottag,hotemo
 	url(r'list/hottag$',views.HotTagListView.as_view(),name="list_hottag"),
 	url(r'list/hotemo$',views.HotEmoListView.as_view(),name="list_hotemo"),
@@ -50,11 +49,12 @@ urlpatterns = patterns('',
 
 	#admin search
 	url(r'^search/view/$', views.AllEmoListView, name='search_view'),
+    url(r'^get/mobile$', views.get_mobile),
 	url(r'^search/author$', views.SearchByAuthor, name='search_by_author_view'),
 	url(r'^search/tag.*$', views.SearchByTag, name='search_by_tag_view'),
-	#get and verify validation code
+
+	#get validation code
 	url(r'^get/valicode$', views.get_and_save_vali_code, name="get_and_save_vali_code"),
-	url(r'^verify/valicode$', views.verify_vali_code, name="verify_vali_code"),
  
 	#update map
 	#^searchbykeyword/(?P<kword>[\w\-]+)
@@ -65,7 +65,7 @@ urlpatterns = patterns('',
 	#file upload view
 	url(r'^upload/new/$', views.PictureCreateView.as_view(), name='upload-new'),
 	url(r'^upload/delete/(?P<pk>\d+)$', views.PictureDeleteView.as_view(), name='upload-delete'),
-	url(r'^upload/view/$', views.PictureListView.as_view(), name='upload-view'),
+	url(r'^upload/view/$', views.PictureListView, name='upload-view'),
 	url(r'^userwork/view/(\d+)$', views.UserWorkListView.as_view(), name='userwork-view'),
 
 	#admin add emo for other users

@@ -2,7 +2,7 @@
 from django.template import Template,Context
 from django.shortcuts import render_to_response,RequestContext
 from django.http import HttpResponse
-from Emoserver.users.models import SiteUser
+from Emoserver.users.models import SiteUser,ValidationCode
 from models import Emotion,Tag,HotTags,HotEmos
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
@@ -834,47 +834,4 @@ def save_share_info(request):
 			return ret_status(400)
 	return ret_status(400)
 
-def get_and_save_vali_code(request,mobile=None):
-	if not mobile:
-		return ret_status(400)
-	try:
-		vali_code_object=ValidationCode()
-		cur_datetime=datetime.now()
-		vali_code_object.vali_code=str(cur_datetime.microsecond)
-		expire_time= cur_datetime+timedelta(2)
-		vali_code_object.expire_time=expire_time
-		vali_code_object.save()	
-	except:
-		return ret_status(400)
-	try:
-		ret_data={}
-		ret_data["status"] =  200
-		ret_data["vali_code"]=vali_code_object.vali_code
-		num=send_short_message(mobile,vali_code_object.vali_code)
-		if num==1:
-			return HttpResponse(json.dumps(ret_data))
-		else:
-			return ret_status(400)
-	except:
-		return ret_status(400)
-
-#验证用户发来的验证码是否在数据库中，如果在的话是否过期
-def verify_vali_code(request,vali_code=None):
-	if not vali_code:
-		return ret_status(400)
-	try:
-		vali_code_object=ValidationCode.objects.get(vali_code=vali_code)
-	except:
-		return ret_status(400)
-	try:
-		expire_time=vali_code_object.expire_time
-		# print expire_time
-	except:
-		return ret_status(400)
-	cur_time=datetime.now()
-	# print cur_time
-	expire_time = datetime.strptime(str(expire_time).rstrip("+00:00"), "%Y-%m-%d %H:%M:%S")	
-	if expire_time<cur_time:
-		return ret_status(400)
-	return ret_status(200)
 

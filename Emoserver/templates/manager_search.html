@@ -98,8 +98,12 @@
                 </div>
             {% endifequal %}
 
-                <div class="popularity_tag" style="margin-top:12px;font-size:13px;float:left;">
-                <span>流行度:  {{ emo.emo_popularity}}</span>
+                <div class="popularity_tag" style="margin-top:12px;font-size:13px;">
+                <!-- <span>流行度:  {{ emo.emo_popularity}}</span> -->
+                <span style="margin-right:30px;">用户收藏:  {{ emo.emo_like_num}}</span>
+                <span style="margin-right:0px;">微博分享:  {{ emo.weibo_share_num}}</span><br>
+                <span style="margin-right:30px;">微信分享:  {{ emo.weixin_share_num}}</span>
+                <span style="margin-right:10px;">微信转发:  {{ emo.weixin_send_num}}</span>
                 </div>
 
                 <div class="pull-right" style="margin-top:5px;">
