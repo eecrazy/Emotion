@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from Emoserver.utils.decorators import admin_needed
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from Emoserver.users.models import SiteUser,ValidationCode
 from short_message  import *
 from pinyin import get_pinyin
 import operator
@@ -237,7 +238,7 @@ def get_hottags(request,face_type="1",sort_by="1"):
 				else:
 					tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
 				ret_data["tag_list"].append(tag_dict)
-			print ret_data["tag_list"]
+			# print ret_data["tag_list"]
 		else:
 			hottag_list=Tag.objects.filter(is_hot_tag=True,tag_bool_deleted=False).order_by("-tag_last_update")
 			for tag in hottag_list:
@@ -690,7 +691,7 @@ def search_emos_by_author(request,username,sortby="1",page="1",page_count="12"):
 	if sortby=="1": #热度，热度最高的排在最前面
 		all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_popularity")
 	else:  #时间，最新上传的排在最前
-		all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("emo_id")
+		all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_id")
 	count=0
 	if all_emos:
 		try:
@@ -782,7 +783,7 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="12"):
 	if sortby=="1": #热度，热度最高的排最前
 		all_emos=cur_tag.emo_list.filter(emo_bool_deleted=False).order_by("-emo_popularity")
 	else:  #时间，最新上传的排在最前
-		all_emos=cur_tag.emo_list.filter(emo_bool_deleted=False).order_by("emo_id")
+		all_emos=cur_tag.emo_list.filter(emo_bool_deleted=False).order_by("-emo_id")
 	count=0
 
 	if all_emos:
@@ -831,6 +832,196 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="12"):
 			tmpdict["emo_like"] = emo.emo_like_num
 			tmpdict["last_update"]=emo.emo_last_update
 			ret_data["emos"].append(tmpdict)
+		return HttpResponse(json.dumps(ret_data))
+	return ret_status(400)
+
+#search tags by pinyin: /app/search/tags/pinyin=a&face_type=1&sortby=1&page=1&count=20
+def search_tags_by_pinyin(request,pinyin,face_type="1",sortby="1",page="1",page_count="12"):
+	try:
+		page=int(page)
+		page_count=int(page_count)
+	except:
+		return ret_status(400)
+
+	ret_data={}
+
+	if sortby=="1": #热度，热度最高的排最前
+		all_tags=Tag.objects.filter(pinyin=pinyin,tag_bool_deleted=False).order_by("-tag_popularity")
+	else:  #时间，最新上传的排在最前
+		all_tags=Tag.objects.filter(pinyin=pinyin,tag_bool_deleted=False).order_by("-tag_last_update")
+	count=0
+
+	if all_tags:
+		try:
+			tags_num=all_tags.count()
+		except:
+			return ret_status(400)
+		ret_data["status"] = 200
+		ret_data["total_num"]=tags_num
+		ret_data["tags"]  = list()
+
+		try:
+			paginator = Paginator(all_tags, page_count) # Show 25 sub_emos per page
+		except:
+			return ret_status(400)
+		try:
+			sub_tags = paginator.page(page)
+		except PageNotAnInteger:
+			# If page is not an integer, deliver first page.
+			sub_tags = paginator.page(1)
+		except EmptyPage:
+			# If page is out of range (e.g. 9999), deliver last page of results.
+			sub_tags = paginator.page(paginator.num_pages)
+
+		if page==paginator.num_pages:
+			ret_data["next_page"]=(-1)
+		elif page>=1 and page<paginator.num_pages:
+			ret_data["next_page"]=page+1
+		else:
+			ret_status(400)
+
+		for tag in sub_tags:
+			tag_dict = {}
+			tag_dict["tag_name"]=tag.tag_name
+			tag_dict["tag_id"]=tag.tag_id
+
+			if face_type=="1":
+				tag_dict["face"]=max([emo.emo_id for emo in tag.emo_list.all()])
+			else:
+				tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
+			ret_data["tags"].append(tag_dict)
+		return HttpResponse(json.dumps(ret_data))
+	return ret_status(400)
+
+#search tags by word vaguely: /app/search/tags/word=哈&face_type=1&sortby=1&page=1&count=20
+def search_tags_by_vaguely_word(request,word,face_type="1",sortby="1",page="1",page_count="12"):
+	try:
+		page=int(page)
+		page_count=int(page_count)
+	except:
+		return ret_status(400)
+
+	ret_data={}
+
+	if sortby=="1": #热度，热度最高的排最前
+		all_tags=Tag.objects.filter(tag_name__contains=word,tag_bool_deleted=False).order_by("-tag_popularity")
+	else:  #时间，最新上传的排在最前
+		all_tags=Tag.objects.filter(tag_name__contains=word,tag_bool_deleted=False).order_by("-tag_last_update")
+	count=0
+
+	if all_tags:
+		try:
+			tags_num=all_tags.count()
+		except:
+			return ret_status(400)
+		ret_data["status"] = 200
+		ret_data["total_num"]=tags_num
+		ret_data["tags"]  = list()
+
+		try:
+			paginator = Paginator(all_tags, page_count) # Show 25 sub_emos per page
+		except:
+			return ret_status(400)
+		try:
+			sub_tags = paginator.page(page)
+		except PageNotAnInteger:
+			# If page is not an integer, deliver first page.
+			sub_tags = paginator.page(1)
+		except EmptyPage:
+			# If page is out of range (e.g. 9999), deliver last page of results.
+			sub_tags = paginator.page(paginator.num_pages)
+
+		if page==paginator.num_pages:
+			ret_data["next_page"]=(-1)
+		elif page>=1 and page<paginator.num_pages:
+			ret_data["next_page"]=page+1
+		else:
+			ret_status(400)
+
+		for tag in sub_tags:
+			tag_dict = {}
+			tag_dict["tag_name"]=tag.tag_name
+			tag_dict["tag_id"]=tag.tag_id
+			# print tag.emo_list.all()[0].emo_id
+			if face_type=="1":
+				tag_dict["face"]=max([emo.emo_id for emo in tag.emo_list.all()])
+				# print tag_dict["face"]
+			else:
+				tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
+			ret_data["tags"].append(tag_dict)
+		return HttpResponse(json.dumps(ret_data))
+	return ret_status(400)
+
+
+
+
+
+
+#search authors by word vaguely: /app/search/authors/word=哈&face_type=1&sortby=1&page=1&count=20
+def search_authors_by_vaguely_word(request,word,face_type="1",sortby="1",page="1",page_count="12"):
+	try:
+		page=int(page)
+		page_count=int(page_count)
+	except:
+		return ret_status(400)
+
+	ret_data={}
+
+	if sortby=="1": #热度，热度最高的排最前
+		all_authors=SiteUser.objects.filter(username__contains=word,is_active=True)
+	else:  #时间，最新上传的排在最前
+		all_authors=SiteUser.objects.filter(username__contains=word,is_active=True)
+	count=0
+
+	if all_authors:
+		if len(all_authors)==0:
+			return ret_status(400)
+		try:
+			authors_num=all_authors.count()
+		except:
+			return ret_status(400)
+		ret_data["status"] = 200
+		ret_data["total_num"]=authors_num
+		ret_data["authors"]  = list()
+
+		try:
+			paginator = Paginator(all_authors, page_count) # Show 25 sub_emos per page
+		except:
+			return ret_status(400)
+		try:
+			sub_authors = paginator.page(page)
+		except PageNotAnInteger:
+			# If page is not an integer, deliver first page.
+			sub_authors = paginator.page(1)
+		except EmptyPage:
+			# If page is out of range (e.g. 9999), deliver last page of results.
+			sub_authors = paginator.page(paginator.num_pages)
+
+		if page==paginator.num_pages:
+			ret_data["next_page"]=(-1)
+		elif page>=1 and page<paginator.num_pages:
+			ret_data["next_page"]=page+1
+		else:
+			ret_status(400)
+
+		for author in sub_authors:
+			author_dict = {}
+			author_dict["username"]=author.username
+			uid=author.id
+			# print face_type
+			if face_type=="1":
+				all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_popularity")
+				if all_emos.count()==0:
+					author_dict["face"]=0
+				else:
+					author_dict["face"]=all_emos[0].emo_id
+			else:
+				all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_id")
+				if all_emos.count()==0:
+					author_dict["face"]=0
+				else:
+					author_dict["face"]=all_emos[0].emo_id
+			ret_data["authors"].append(author_dict)
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 

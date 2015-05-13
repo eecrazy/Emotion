@@ -21,6 +21,18 @@ urlpatterns = patterns('',
 	#/app/search/tag=xxx&sortby=1&page=1&count=50
 	url(r'^app/search/tag=(?P<tag_name>.*)&sortby=(?P<sortby>[1-2]{1})&page=(?P<page>\d+)&count=(?P<page_count>\d+)$',ajax.search_emos_by_tag),
 
+
+
+	#search tags by pinyin: /app/search/tags/pinyin=a&face_type=1&sortby=1&page=1&count=20
+	url(r'^app/search/tags/pinyin=(?P<pinyin>.*)&face_type=(?P<face_type>[1-2]{1})&sortby=(?P<sortby>[1-2]{1})&page=(?P<page>\d+)&count=(?P<page_count>\d+)$',ajax.search_tags_by_pinyin),
+
+	#search tags by word vaguely: /app/search/tags/word=hh&face_type=1&sortby=1&page=1&count=20
+	url(r'^app/search/tags/word=(?P<word>.*)&face_type=(?P<face_type>[1-2]{1})&sortby=(?P<sortby>[1-2]{1})&page=(?P<page>\d+)&count=(?P<page_count>\d+)$',ajax.search_tags_by_vaguely_word),
+
+	#search authors by word vaguely: /app/search/authors/word=hh&face_type=1&sortby=1&page=1&count=20
+	url(r'^app/search/authors/word=(?P<word>.*)&face_type=(?P<face_type>[1-2]{1})&sortby=(?P<sortby>[1-2]{1})&page=(?P<page>\d+)&count=(?P<page_count>\d+)$',ajax.search_authors_by_vaguely_word),
+
+
 	#return the emo html to share 
 	url(r'^app/share/emoid=(?P<emoid>\d+)$',ajax.get_emo_html),
 
