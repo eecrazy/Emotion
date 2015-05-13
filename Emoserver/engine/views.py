@@ -175,6 +175,11 @@ class PictureCreateView(CreateView):
                 self.object.emo_tag_list.add(tag_object)
                 #save the emotion to tag as well
                 tag_object.emo_init_list.add(self.object)
+                tag_object.emo_list.add(self.object)
+                tag_object.tag_last_update=max([emo.emo_id for emo in tag_object.emo_list.all()])
+                # print tag_object.tag_last_update
+                tag_object.tag_popularity=sum([emo.emo_popularity for emo in tag_object.emo_list.all()])
+
                 tag_object.save()
 
         self.object.save()
@@ -222,6 +227,10 @@ class CreateemoForOthers(CreateView):
                 self.object.emo_tag_list.add(tag_object)
                 #save the emotion to tag as well
                 tag_object.emo_init_list.add(self.object)
+                tag_object.emo_list.add(self.object)
+                tag_object.tag_last_update=max([emo.emo_id for emo in tag_object.emo_list.all()])
+                # print tag_object.tag_last_update
+                tag_object.tag_popularity=sum([emo.emo_popularity for emo in tag_object.emo_list.all()])
                 tag_object.save()
 
         self.object.save()

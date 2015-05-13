@@ -9,6 +9,7 @@ from django.db.models import Q
 from Emoserver.utils.decorators import admin_needed
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from short_message  import *
+from pinyin import get_pinyin
 import operator
 import json
 from base64 import *
@@ -41,6 +42,10 @@ def lookuporinsert_tag(tag_name):
 		tag_object = Tag()
 		tag_object.tag_name = tag_name
 		tag_object.tag_bool_deleted=False
+		tag_object.pinyin=get_pinyin(tag_name)
+		# print tag_object.pinyin
+		tag_object.tag_popularity=0
+		tag_object.tag_last_update=0
 		tag_object.save()
 	return tag_object
 
@@ -169,6 +174,13 @@ def annoate_emotion(request):
 							emo_object.emo_init_tag_list.add(tag_object)
 							#save the emotion to the tag as well
 							tag_object.emo_list.add(emo_object)
+
+							# print tag_object.tag_name
+							tag_object.tag_last_update=max([emo.emo_id for emo in tag_object.emo_list.all()])
+							# print tag_object.tag_last_update
+							tag_object.tag_popularity=sum([emo.emo_popularity for emo in tag_object.emo_list.all()])
+							# print tag_object.tag_popularity
+							
 							tag_object.save()
 					emo_object.save()
 					return get_latest_emo_info(emo_object)
@@ -182,15 +194,27 @@ def annoate_emotion(request):
 
 '''
 # {
-#    "status":200,           //状态码可以为200,400.200表示成功
+# //状态码可以为200,400.200表示成功
 # //400表示失败,失败不传回数据
-#    "categories":{//热门表情的类别
-#    "足球":[1,23,4], //表情的类别名，表情的ID编号列表
-#    "篮球":[2,25,46], //表情的类别名，表情的ID编号列表
-#    },
-# }
-'''
-def get_hottags(request):
+{"status": 200, 
+"tag_list": [
+{"tag_name": "haha", "tag_id": 86, "face": 63}, 
+{"tag_name": "xiaoji", "tag_id": 89, "face": 65},
+{"tag_name": "bbb", "tag_id": 90, "face": 66}]
+}
+ '''
+
+# /app/gethottags/face_type=1&sort_by=1
+# face_type: 专辑封面：1最新表情 2 最热门表情
+# sort_by:1 热度，热度最高的排在最前面，2 时间，最新上传的排在最前
+
+def get_hottags(request,face_type="1",sort_by="1"):
+	try:
+		face_type=int(face_type)
+		sort_by=int(sort_by)
+	except:
+		return ret_status(400)
+
 	#if request.is_ajax():
 	all_hottags = HotTags.objects.all()
 
@@ -198,13 +222,35 @@ def get_hottags(request):
 		ret_data = dict()
 
 		ret_data["status"] = 200
-		ret_data["categories"]  = list()
-		for hottag in all_hottags:
-			tag_dict = dict()
-			tag_dict["name"] = hottag.hottag_category
-			tag_dict["taglist"] = [tag.tag_id for tag in hottag.hottag_list.all()]
-			
-			ret_data["categories"].append(tag_dict)
+		ret_data["tag_list"]  = list()
+		tag_dict={}
+		if sort_by==1:
+			hottag_list=Tag.objects.filter(is_hot_tag=True,tag_bool_deleted=False).order_by("-tag_popularity")
+			print hottag_list
+			for tag in hottag_list:
+				tag_dict={}
+				tag_dict["tag_name"]=tag.tag_name
+				tag_dict["tag_id"]=tag.tag_id
+
+				if face_type==1:
+					tag_dict["face"]=max([emo.emo_id for emo in tag.emo_list.all()])
+				else:
+					tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
+				ret_data["tag_list"].append(tag_dict)
+			print ret_data["tag_list"]
+		else:
+			hottag_list=Tag.objects.filter(is_hot_tag=True,tag_bool_deleted=False).order_by("-tag_last_update")
+			for tag in hottag_list:
+				tag_dict={}
+				# print tag.tag_name
+				tag_dict["tag_name"]=tag.tag_name
+				tag_dict["tag_id"]=tag.tag_id
+
+				if face_type==1:
+					tag_dict["face"]=max([emo.emo_id for emo in tag.emo_list.all()])
+				else:
+					tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
+				ret_data["tag_list"].append(tag_dict)
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
@@ -300,6 +346,8 @@ def CreateHottag(request):
 
 		for tag_object in tag_list:
 			if tag_object:
+				tag_object.is_hot_tag=True
+				tag_object.save()
 				hottags.hottag_list.add(tag_object)
 		hottags.save()
 		return HttpResponse(json.dumps({"ok":True}))
@@ -320,6 +368,8 @@ def AddHottag(request):
 				#can only add to his own emotion	
 				tag_object = lookup_tag(tag)
 				if tag_object:
+					tag_object.is_hot_tag=True
+					tag_object.save()
 					hottag_object.hottag_list.add(tag_object)
 					hottag_object.save()
 					return ret_status(200)
@@ -579,6 +629,14 @@ def addtag(request):
 						emo_object.save()
 
 						tag_object.emo_list.add(emo_object)
+
+						# print tag_object.tag_name
+
+						tag_object.tag_last_update=max([emo.emo_id for emo in tag_object.emo_list.all()])
+						
+						# print tag_object.tag_last_update
+						tag_object.tag_popularity=sum([emo.emo_popularity for emo in tag_object.emo_list.all()])
+						# print tag_object.tag_popularity
 						tag_object.save()
 						return ret_status(200)
 	return ret_status(400)
@@ -764,7 +822,7 @@ def search_emos_by_tag(request,tag_name,sortby="1",page="1",page_count="12"):
 
 		for emo in sub_emos:
 			tmpdict = dict()
-			tmpdict["author"]=get_username_by_id(emo.emo_id)
+			tmpdict["author"]=emo.emo_upload_user.username
 			tmpdict["emo_type"] = emo.emo_type
 			tmpdict["emo_id"] = emo.emo_id
 			tmpdict["emo_detail"] = str(emo.emo_img)
@@ -789,6 +847,28 @@ def get_emo_html(request,emoid):
 	except:
 		return ret_status(400)
 
+
+#return all emo info about a emo 
+#app/all_emo_info/emoid=1
+def get_all_emo_info(request,emoid):
+	try:
+		emoid=int(emoid)
+	except:
+		return ret_status(400)
+	try:
+		emo_object=Emotion.objects.get(emo_id=emoid)#,emo_bool_deleted=False)
+	except:
+		return ret_status(400)
+
+	ret_data={}
+	ret_data["author"]=emo_object.emo_upload_user.username
+	ret_data["tag_list"]=[tag.tag_id for tag in emo_object.emo_tag_list.all()]
+	ret_data["emo_popularity"]=emo_object.emo_popularity
+	ret_data["weixin_send_num"]=emo_object.weixin_send_num
+	ret_data["weixin_share_num"]=emo_object.weixin_share_num
+	ret_data["weibo_share_num"]=emo_object.weibo_share_num
+	ret_data["emo_like_num"]=emo_object.emo_like_num
+	return HttpResponse(json.dumps(ret_data))
 
 
 '''
@@ -827,6 +907,13 @@ def save_share_info(request):
 				else:
 					emo_object.emo_like_num+=1				
 				emo_object.save()
+
+				for tag_object in emo_object.emo_tag_list.all():
+					tag_object.tag_popularity+=1;
+					tag_object.save()
+				for tag_object in emo_object.emo_init_tag_list.all():
+					tag_object.tag_popularity+=1;
+					tag_object.save()
 				return ret_status(200)
 			else:
 				return ret_status(400)

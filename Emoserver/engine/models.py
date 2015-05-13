@@ -41,9 +41,12 @@ class Tag(models.Model):
 
 	tag_id = models.AutoField(primary_key=True)
 	tag_name = models.CharField(max_length=255,unique=True,db_index=True)
-	tag_popularity = models.IntegerField(default=0)
+	tag_popularity = models.IntegerField(default=0,db_index=True)
 	tag_last_update = models.BigIntegerField(db_index=True)
 	tag_bool_deleted = models.BooleanField(default=False)
+	is_hot_tag = models.BooleanField(default=False)
+	pinyin=models.CharField(max_length=2,db_index=True)
+
 
 	def save(self,*args,**kwargs):
 		self.tag_last_update = time.time()*1000

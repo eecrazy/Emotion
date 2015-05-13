@@ -24,12 +24,17 @@ urlpatterns = patterns('',
 	#return the emo html to share 
 	url(r'^app/share/emoid=(?P<emoid>\d+)$',ajax.get_emo_html),
 
+	#return all emo info about a emo 
+	url(r'^app/all_emo_info/emoid=(?P<emoid>\d+)$',ajax.get_all_emo_info),
+
 	#save the emo share info 
 	url(r'^app/share/save_share_info$',ajax.save_share_info),
 
 	#get hot emo and hot tag
 	url(r'^app/gethotemos$',ajax.get_hotemos),
-	url(r'^app/gethottags$',ajax.get_hottags),
+
+	# /app/gethottags/face_type=1&sort_by=1
+	url(r'^app/gethottags/face_type=(?P<face_type>[1-2]{1})&sort_by=(?P<sort_by>[1-2]{1})$',ajax.get_hottags),
 
 	#add or remove tag
 	url(r'^addtag$',ajax.addtag),
