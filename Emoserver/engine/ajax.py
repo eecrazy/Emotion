@@ -370,7 +370,6 @@ def CreateHottag(request):
 
 		for tag_object in tag_list:
 			if tag_object:
-				# tag_object.is_hot_tag=True
 				tag_object.save()
 				hottags.hottag_list.add(tag_object)
 		hottags.save()
@@ -392,7 +391,6 @@ def AddHottag(request):
 				#can only add to his own emotion	
 				tag_object = lookup_tag(tag)
 				if tag_object:
-					# tag_object.is_hot_tag=True
 					tag_object.save()
 					hottag_object.hottag_list.add(tag_object)
 					hottag_object.save()
@@ -992,7 +990,7 @@ def search_tags_by_vaguely_word(request,word,face_type="1",sortby="1",page="1",p
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
-#search authors by word vaguely: /app/search/authors/word=哈&face_type=1&sortby=1&page=1&count=20
+#search authors by word vaguely: /app/search/authors/word=l&face_type=1&sortby=1&page=1&count=20
 def search_authors_by_vaguely_word(request,word,face_type="1",sortby="1",page="1",page_count="12"):
 	try:
 		page=int(page)
@@ -1002,17 +1000,33 @@ def search_authors_by_vaguely_word(request,word,face_type="1",sortby="1",page="1
 
 	ret_data={}
 
+
 	if sortby=="1": #热度，热度最高的排最前
-		all_authors=SiteUser.objects.filter(username__contains=word,is_active=True)
+		temp_authors=SiteUser.objects.filter(username__contains=word,is_active=True)
+		author_hash={}
+		for author in temp_authors:
+			author_hash[author]=sum([emo.emo_popularity for emo in author.emotion_set.all()])
+		sorted_author_hash = sorted(author_hash.iteritems(), key=operator.itemgetter(1), reverse=True)
+		all_authors=[]
+		for item in sorted_author_hash:
+			all_authors.append(item[0])
+
 	else:  #时间，最新上传的排在最前
-		all_authors=SiteUser.objects.filter(username__contains=word,is_active=True)
-	count=0
+		temp_authors=SiteUser.objects.filter(username__contains=word,is_active=True)
+		author_hash={}
+		for author in temp_authors:
+			author_hash[author]=max([emo.emo_id for emo in author.emotion_set.all()])
+		sorted_author_hash = sorted(author_hash.iteritems(), key=operator.itemgetter(1), reverse=True)
+		all_authors=[]
+		for item in sorted_author_hash:
+			all_authors.append(item[0])
+		# all_authors=SiteUser.objects.filter(username__contains=word,is_active=True)
 
 	if all_authors:
 		if len(all_authors)==0:
 			return ret_status(400)
 		try:
-			authors_num=all_authors.count()
+			authors_num=len(all_authors)
 		except:
 			return ret_status(400)
 		ret_data["status"] = 200
