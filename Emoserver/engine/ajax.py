@@ -193,21 +193,18 @@ def annoate_emotion(request):
 
 
 
-'''
 # {
-# //状态码可以为200,400.200表示成功
+#    "status":200,           //状态码可以为200,400.200表示成功
 # //400表示失败,失败不传回数据
-{"status": 200, 
-"tag_list": [
-{"tag_name": "haha", "tag_id": 86, "face": 63}, 
-{"tag_name": "xiaoji", "tag_id": 89, "face": 65},
-{"tag_name": "bbb", "tag_id": 90, "face": 66}]
-}
- '''
+#    "categories":
+#	{//热门标签的类别
+#    {"cat_name":足球","tag_list":[{tag_id,tag_name,face_id,face_img},{},{},]}, //标签的类别名，标签列表
+#    },
+# }
 
 # /app/gethottags/face_type=1&sort_by=1
-# face_type: 专辑封面：1最新表情 2 最热门表情
-# sort_by:1 热度，热度最高的排在最前面，2 时间，最新上传的排在最前
+# face_type: 专辑封面：1 最热门表情, 2最新表情 
+# sort_by:1 热度，热度最高的排在最前面，2 时间，最新的标签排在最前
 
 def get_hottags(request,face_type="1",sort_by="1"):
 	try:
@@ -223,35 +220,61 @@ def get_hottags(request,face_type="1",sort_by="1"):
 		ret_data = dict()
 
 		ret_data["status"] = 200
-		ret_data["tag_list"]  = list()
-		tag_dict={}
-		if sort_by==1:
-			hottag_list=Tag.objects.filter(is_hot_tag=True,tag_bool_deleted=False).order_by("-tag_popularity")
-			print hottag_list
-			for tag in hottag_list:
-				tag_dict={}
-				tag_dict["tag_name"]=tag.tag_name
-				tag_dict["tag_id"]=tag.tag_id
+		ret_data["categories"]  = []
 
-				if face_type==1:
-					tag_dict["face"]=max([emo.emo_id for emo in tag.emo_list.all()])
-				else:
-					tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
-				ret_data["tag_list"].append(tag_dict)
-			# print ret_data["tag_list"]
-		else:
-			hottag_list=Tag.objects.filter(is_hot_tag=True,tag_bool_deleted=False).order_by("-tag_last_update")
-			for tag in hottag_list:
-				tag_dict={}
-				# print tag.tag_name
-				tag_dict["tag_name"]=tag.tag_name
-				tag_dict["tag_id"]=tag.tag_id
+		for hottag in all_hottags:
+			cat_dict = {}
+			cat_dict["cat_name"] = hottag.hottag_category
+			cat_dict["tag_list"] = []
 
-				if face_type==1:
-					tag_dict["face"]=max([emo.emo_id for emo in tag.emo_list.all()])
-				else:
-					tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
-				ret_data["tag_list"].append(tag_dict)
+			if sort_by==1:
+				#按照类别内标签热度排序，热度高的排在前面
+				hottag_list=hottag.hottag_list.filter(tag_bool_deleted=False).order_by("-tag_popularity")
+				# print hottag_list
+				for tag in hottag_list:
+					tag_dict={}
+					tag_dict["tag_name"]=tag.tag_name
+					tag_dict["tag_id"]=tag.tag_id
+
+					if face_type==1:
+						#标签封面取对应热度最高的表情
+						num=-100
+						for emo in tag.emo_list.all():
+							if emo.emo_popularity>num:
+								num=emo.emo_popularity
+								tag_dict["face_id"]=emo.emo_id
+								tag_dict["face_img"]=str(emo.emo_img)
+					else:
+						#标签封面取对应时间最新的表情
+						tag_dict["face_id"]=max([emo.emo_id for emo in tag.emo_list.all()])
+						tag_dict["face_img"]=str(Emotion.objects.get(emo_id=tag_dict["face_id"]).emo_img)
+
+					cat_dict["tag_list"].append(tag_dict)
+				# print ret_data["tag_list"]
+			else:
+				#按照类别内标签时间排序，最新标签排在前面
+				hottag_list=hottag.hottag_list.filter(tag_bool_deleted=False).order_by("-tag_last_update")
+				for tag in hottag_list:
+					tag_dict={}
+					# print tag.tag_name
+					tag_dict["tag_name"]=tag.tag_name
+					tag_dict["tag_id"]=tag.tag_id
+
+					if face_type==1:
+						#标签封面取对应热度最高的表情
+						num=-100
+						for emo in tag.emo_list.all():
+							if emo.emo_popularity>num:
+								num=emo.emo_popularity
+								tag_dict["face_id"]=emo.emo_id
+								tag_dict["face_img"]=str(emo.emo_img)
+					else:
+						#标签封面取对应时间最新的表情
+						tag_dict["face_id"]=max([emo.emo_id for emo in tag.emo_list.all()])
+						tag_dict["face_img"]=str(Emotion.objects.get(emo_id=tag_dict["face_id"]).emo_img)
+					cat_dict["tag_list"].append(tag_dict)
+			ret_data["categories"].append(cat_dict)
+		
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
 
@@ -347,7 +370,7 @@ def CreateHottag(request):
 
 		for tag_object in tag_list:
 			if tag_object:
-				tag_object.is_hot_tag=True
+				# tag_object.is_hot_tag=True
 				tag_object.save()
 				hottags.hottag_list.add(tag_object)
 		hottags.save()
@@ -369,7 +392,7 @@ def AddHottag(request):
 				#can only add to his own emotion	
 				tag_object = lookup_tag(tag)
 				if tag_object:
-					tag_object.is_hot_tag=True
+					# tag_object.is_hot_tag=True
 					tag_object.save()
 					hottag_object.hottag_list.add(tag_object)
 					hottag_object.save()
@@ -858,7 +881,7 @@ def search_tags_by_pinyin(request,pinyin,face_type="1",sortby="1",page="1",page_
 			return ret_status(400)
 		ret_data["status"] = 200
 		ret_data["total_num"]=tags_num
-		ret_data["tags"]  = list()
+		ret_data["tags"]  = []
 
 		try:
 			paginator = Paginator(all_tags, page_count) # Show 25 sub_emos per page
@@ -886,12 +909,20 @@ def search_tags_by_pinyin(request,pinyin,face_type="1",sortby="1",page="1",page_
 			tag_dict["tag_id"]=tag.tag_id
 
 			if face_type=="1":
-				tag_dict["face"]=max([emo.emo_id for emo in tag.emo_list.all()])
+				#标签封面取对应热度最高的表情
+				num=-100
+				for emo in tag.emo_list.all():
+					if emo.emo_popularity>num:
+						num=emo.emo_popularity
+						tag_dict["face_id"]=emo.emo_id
+						tag_dict["face_img"]=str(emo.emo_img)
 			else:
-				tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
+				#标签封面取对应时间最新的表情
+				tag_dict["face_id"]=max([emo.emo_id for emo in tag.emo_list.all()])
+				tag_dict["face_img"]=str(Emotion.objects.get(emo_id=tag_dict["face_id"]).emo_img)
 			ret_data["tags"].append(tag_dict)
 		return HttpResponse(json.dumps(ret_data))
-	return ret_status(400)
+	return ret_status("hehe")
 
 #search tags by word vaguely: /app/search/tags/word=哈&face_type=1&sortby=1&page=1&count=20
 def search_tags_by_vaguely_word(request,word,face_type="1",sortby="1",page="1",page_count="12"):
@@ -943,19 +974,23 @@ def search_tags_by_vaguely_word(request,word,face_type="1",sortby="1",page="1",p
 			tag_dict["tag_name"]=tag.tag_name
 			tag_dict["tag_id"]=tag.tag_id
 			# print tag.emo_list.all()[0].emo_id
+
 			if face_type=="1":
-				tag_dict["face"]=max([emo.emo_id for emo in tag.emo_list.all()])
-				# print tag_dict["face"]
+				#标签封面取对应热度最高的表情
+				num=-100
+				for emo in tag.emo_list.all():
+					if emo.emo_popularity>num:
+						num=emo.emo_popularity
+						tag_dict["face_id"]=emo.emo_id
+						tag_dict["face_img"]=str(emo.emo_img)
 			else:
-				tag_dict["face"]=max([emo.emo_popularity for emo in tag.emo_list.all()])
+				#标签封面取对应时间最新的表情
+				tag_dict["face_id"]=max([emo.emo_id for emo in tag.emo_list.all()])
+				tag_dict["face_img"]=str(Emotion.objects.get(emo_id=tag_dict["face_id"]).emo_img)
 			ret_data["tags"].append(tag_dict)
+
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
-
-
-
-
-
 
 #search authors by word vaguely: /app/search/authors/word=哈&face_type=1&sortby=1&page=1&count=20
 def search_authors_by_vaguely_word(request,word,face_type="1",sortby="1",page="1",page_count="12"):
@@ -1012,15 +1047,17 @@ def search_authors_by_vaguely_word(request,word,face_type="1",sortby="1",page="1
 			if face_type=="1":
 				all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_popularity")
 				if all_emos.count()==0:
-					author_dict["face"]=0
+					author_dict["face_id"]=0
 				else:
-					author_dict["face"]=all_emos[0].emo_id
+					author_dict["face_id"]=all_emos[0].emo_id
+					author_dict["face_img"]=str(all_emos[0].emo_img)
 			else:
 				all_emos=Emotion.objects.filter(emo_upload_user=uid,emo_bool_deleted=False).order_by("-emo_id")
 				if all_emos.count()==0:
-					author_dict["face"]=0
+					author_dict["face_id"]=0
 				else:
-					author_dict["face"]=all_emos[0].emo_id
+					author_dict["face_id"]=all_emos[0].emo_id
+					author_dict["face_img"]=str(all_emos[0].emo_img)
 			ret_data["authors"].append(author_dict)
 		return HttpResponse(json.dumps(ret_data))
 	return ret_status(400)
@@ -1059,6 +1096,7 @@ def get_all_emo_info(request,emoid):
 	ret_data["weixin_share_num"]=emo_object.weixin_share_num
 	ret_data["weibo_share_num"]=emo_object.weibo_share_num
 	ret_data["emo_like_num"]=emo_object.emo_like_num
+	ret_data["emo_img"]=str(emo_object.emo_img)
 	return HttpResponse(json.dumps(ret_data))
 
 

@@ -44,7 +44,7 @@ class Tag(models.Model):
 	tag_popularity = models.IntegerField(default=0,db_index=True)
 	tag_last_update = models.BigIntegerField(db_index=True)
 	tag_bool_deleted = models.BooleanField(default=False)
-	is_hot_tag = models.BooleanField(default=False)
+	# is_hot_tag = models.BooleanField(default=False)
 	pinyin=models.CharField(max_length=2,db_index=True)
 
 
