@@ -284,7 +284,7 @@ class PictureDeleteView(DeleteView):
 
 
 @login_needed(login_url="/")
-def PictureListView(request,page=1,page_count=2):
+def PictureListView(request,page=1,page_count=12):
     page=request.GET.get('page',None)
     if page==None:
         page=1
